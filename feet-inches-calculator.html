@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Meta and Title -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Feet and Inches Calculator</title>
+    <!-- Favicon -->
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' stroke='black' stroke-width='3' fill='red' /></svg>"
+    />
+    <!-- Math.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+    <!-- Styles -->
+    <style>
+      :root {
+        --bg-color: #ffffff;
+        --text-color: #000000;
+        --input-bg-color: #ffffff;
+        --input-text-color: #000000;
+        --table-border-color: #ddd;
+        --table-header-bg-color: #f2f2f2;
+        --table-row-even-bg-color: #f9f9f9;
+        --error-text-color: red;
+        --button-bg-color: red;
+        --button-text-color: white;
+        --border-color: #ccc;
+        --placeholder-color: grey;
+      }
+
+      body {
+        font-family: monospace;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+      }
+
+      /* Removed input styling and moved to .input-cell.placeholder */
+
+      /* History Section */
+      .history {
+        margin-top: 20px;
+      }
+
+      .history table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: monospace;
+        table-layout: fixed;
+      }
+
+      .history th,
+      .history td {
+        border: 1px solid var(--table-border-color);
+        padding: 8px;
+        text-align: left;
+        position: relative;
+        width: 12.5%;
+        transition: background-color 0.3s, color 0.3s;
+        min-height: 30px;
+      }
+
+      .history th {
+        background-color: var(--table-header-bg-color);
+      }
+
+      .history td {
+        white-space: normal;
+        overflow-wrap: break-word;
+      }
+
+      .history tr:nth-child(even) {
+        background-color: var(--table-row-even-bg-color);
+      }
+
+      h1 {
+        margin-bottom: 20px;
+      }
+
+      .error {
+        color: var(--error-text-color);
+        min-height: 20px;
+      }
+
+      /* Delete Button Styles */
+      .delete-button {
+        display: none;
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background-color: var(--button-bg-color);
+        color: var(--button-text-color);
+        border: 1px solid grey;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 18px;
+        text-align: center;
+        padding: 0;
+        transition: background-color 0.3s, color 0.3s;
+      }
+
+      /* Show delete button on row hover or button hover */
+      .history tr:hover .delete-button,
+      .delete-button:hover {
+        display: block;
+      }
+
+      /* Styles for the Input cell */
+      .history th.input-header {
+        vertical-align: middle;
+        text-align: left;
+      }
+
+      .history td.input-cell {
+        vertical-align: middle;
+        text-align: left;
+        /* Moved input styles here */
+        font-family: monospace;
+        width: 100%;
+        padding: 10px;
+        margin: 10px 0;
+        box-sizing: border-box;
+        background-color: var(--input-bg-color);
+        color: var(--input-text-color);
+        border: 1px solid var(--table-border-color);
+        transition: background-color 0.3s, color 0.3s;
+        position: relative;
+      }
+
+      #liveInputCell {
+        /* Add an inset box-shadow to create an inner border */
+        box-shadow: inset 0 0 0 2px lightblue;
+      }
+
+      /* Input inside the cell */
+      .input-cell input {
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        border: none;
+        background: transparent;
+        font-family: inherit;
+        color: inherit;
+        outline: none;
+      }
+
+      /* Placeholder Style */
+      .placeholder {
+        color: var(--placeholder-color);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Feet and Inches Calculator</h1>
+
+    <!-- Error Message -->
+    <div class="error" id="errorMessage" aria-live="assertive"></div>
+
+    <div class="history">
+      <table id="historyTable">
+        <thead>
+          <tr>
+            <th rowspan="2" colspan="4" class="input-header">Input</th>
+            <th colspan="2">Feet</th>
+            <th colspan="2">Inches</th>
+          </tr>
+          <tr>
+            <th>Fractional</th>
+            <th>Decimal</th>
+            <th>Fractional</th>
+            <th>Decimal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Live Preview Row -->
+          <tr>
+            <td colspan="4" class="input-cell placeholder" id="liveInputCell">
+              <input
+                type="text"
+                id="conversionInputBox"
+                placeholder="5' + 1.25 + 3 1/4&quot; or (5' * 2)"
+                aria-label="Feet and Inches Input"
+              />
+            </td>
+            <td id="liveFractionalFeetInches">&nbsp;</td>
+            <td id="liveDecimalFeetInches">&nbsp;</td>
+            <td id="liveFractionalInches">&nbsp;</td>
+            <td id="liveDecimalInches">&nbsp;</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Script Section -->
+    <script>
+      (() => {
+        const inputBox = document.getElementById("conversionInputBox");
+        const errorMessage = document.getElementById("errorMessage");
+        const historyTableBody = document.querySelector("#historyTable tbody");
+
+        // Live Preview Elements
+        const liveInputCell = document.getElementById("liveInputCell");
+        const liveFractionalFeetInches = document.getElementById(
+          "liveFractionalFeetInches"
+        );
+        const liveDecimalFeetInches = document.getElementById(
+          "liveDecimalFeetInches"
+        );
+        const liveFractionalInches = document.getElementById(
+          "liveFractionalInches"
+        );
+        const liveDecimalInches = document.getElementById("liveDecimalInches");
+
+        // Helper function to parse fractions and mixed numbers
+        const parseFraction = (fraction) => {
+          try {
+            return math.number(math.fraction(fraction));
+          } catch {
+            throw new Error(`Invalid fraction: ${fraction}`);
+          }
+        };
+
+        // Preprocess the input to replace feet and inches expressions
+        const preprocessInput = (input) => {
+          let output = input;
+
+          // Updated regex patterns to handle decimal numbers (e.g., .5, 5.25)
+          const feetInchesRegex =
+            /(-?(?:\d*\.?\d+)(?:\s+\d+\/\d+)?)(?:\s*')\s*(-?(?:\d*\.?\d+)?(?:\s+\d+\/\d+)?)?(?:\s*")/g;
+          const feetOnlyRegex = /(-?(?:\d*\.?\d+)(?:\s+\d+\/\d+)?)(?:\s*')/g;
+          const inchesOnlyRegex = /(-?(?:\d*\.?\d+)(?:\s+\d+\/\d+)?)(?:\s*")/g;
+
+          // Handle feet and inches together
+          output = output.replace(
+            feetInchesRegex,
+            function (match, feetStr, inchesStr) {
+              const feet = parseFraction(feetStr);
+              const inches = inchesStr ? parseFraction(inchesStr) : 0;
+              const totalInches = feet * 12 + inches;
+              return totalInches.toString();
+            }
+          );
+
+          // Handle feet only
+          output = output.replace(feetOnlyRegex, function (match, feetStr) {
+            const feet = parseFraction(feetStr);
+            const totalInches = feet * 12;
+            return totalInches.toString();
+          });
+
+          // Handle inches only
+          output = output.replace(inchesOnlyRegex, function (match, inchesStr) {
+            const inches = parseFraction(inchesStr);
+            return inches.toString();
+          });
+
+          return output;
+        };
+
+        // Helper function to format numbers as fractions
+        const formatFraction = (value) => {
+          if (value === 0) return "0";
+          const fraction = math.fraction(Math.abs(value)).simplify();
+          return fraction.d === 1
+            ? `${fraction.n}`
+            : `${fraction.n}/${fraction.d}`;
+        };
+
+        // Helper function to format mixed numbers
+        const formatMixedNumber = (value) => {
+          const absValue = Math.abs(value);
+          const wholePart = Math.floor(absValue);
+          const fractionalPart = absValue - wholePart;
+          if (fractionalPart === 0) return `${wholePart}`;
+          const fraction = formatFraction(fractionalPart);
+          return wholePart === 0 ? `${fraction}` : `${wholePart} ${fraction}`;
+        };
+
+        // Convert total inches to feet and inches
+        const inchesToFeet = (inches) => {
+          const feet = Math.floor(inches / 12);
+          const remainingInches = inches % 12;
+          return {
+            feet: feet,
+            inches: remainingInches,
+          };
+        };
+
+        // Main conversion function
+        const convertInput = (input) => {
+          const processedInput = preprocessInput(input);
+          let totalInches = 0;
+
+          // Evaluate the processed input
+          totalInches = math.evaluate(processedInput);
+
+          const sign = totalInches < 0 ? "-" : "";
+          totalInches = Math.abs(totalInches);
+
+          const feetData = inchesToFeet(totalInches);
+          const fractionalFeetInches = `${sign}${formatMixedNumber(
+            feetData.feet
+          )}'-${formatMixedNumber(feetData.inches)}"`;
+          const decimalFeetInches = `${sign}${(totalInches / 12)
+            .toFixed(5)
+            .replace(/\.?0+$/, "")}'`;
+          const fractionalInches = `${sign}${formatMixedNumber(totalInches)}"`;
+          const decimalInches = `${sign}${totalInches
+            .toFixed(5)
+            .replace(/\.?0+$/, "")}"`;
+
+          return {
+            fractionalFeetInches,
+            decimalFeetInches,
+            fractionalInches,
+            decimalInches,
+          };
+        };
+
+        // Update the history table with a new entry
+        const updateHistory = (
+          input,
+          fractionalFeetInches,
+          decimalFeetInches,
+          fractionalInches,
+          decimalInches
+        ) => {
+          const row = historyTableBody.insertRow(1); // Insert after live preview row
+
+          // Input cell with delete button
+          const inputCell = document.createElement("td");
+          inputCell.setAttribute("colspan", "4");
+          inputCell.classList.add("input-cell");
+          inputCell.style.position = "relative";
+
+          // Delete button
+          const deleteBtn = document.createElement("button");
+          deleteBtn.textContent = "X";
+          deleteBtn.classList.add("delete-button");
+          deleteBtn.title = "Delete this entry";
+          deleteBtn.setAttribute("aria-label", "Delete entry");
+          deleteBtn.onclick = () => {
+            const row = deleteBtn.parentElement.parentElement;
+            row.parentElement.removeChild(row);
+          };
+
+          inputCell.textContent = input;
+          inputCell.appendChild(deleteBtn);
+          row.appendChild(inputCell);
+
+          // Other cells
+          row.insertCell(-1).textContent = fractionalFeetInches;
+          row.insertCell(-1).textContent = decimalFeetInches;
+          row.insertCell(-1).textContent = fractionalInches;
+          row.insertCell(-1).textContent = decimalInches;
+        };
+
+        // Event listener for input changes
+        inputBox.addEventListener("input", () => {
+          const input = inputBox.value.trim();
+
+          if (!input) {
+            // Show placeholder when input is empty
+            const inputElement = liveInputCell.querySelector("input");
+            inputElement.placeholder = "5' + 1.25 + 3 1/4\" or (5' * 2) + 3\"";
+            liveFractionalFeetInches.textContent = "\u00A0";
+            liveDecimalFeetInches.textContent = "\u00A0";
+            liveFractionalInches.textContent = "\u00A0";
+            liveDecimalInches.textContent = "\u00A0";
+            errorMessage.textContent = "";
+            return;
+          } else {
+            // Remove placeholder text when user types
+            const inputElement = liveInputCell.querySelector("input");
+            inputElement.placeholder = "";
+          }
+
+          try {
+            const result = convertInput(input);
+            liveFractionalFeetInches.textContent = result.fractionalFeetInches;
+            liveDecimalFeetInches.textContent = result.decimalFeetInches;
+            liveFractionalInches.textContent = result.fractionalInches;
+            liveDecimalInches.textContent = result.decimalInches;
+            errorMessage.textContent = "";
+          } catch {
+            // Clear live preview on error
+            liveFractionalFeetInches.textContent = "\u00A0";
+            liveDecimalFeetInches.textContent = "\u00A0";
+            liveFractionalInches.textContent = "\u00A0";
+            liveDecimalInches.textContent = "\u00A0";
+          }
+        });
+
+        // Event listener for Enter key
+        inputBox.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            const input = inputBox.value.trim();
+            if (!input) {
+              errorMessage.textContent = "Input cannot be empty.";
+              return;
+            }
+            try {
+              const result = convertInput(input);
+              updateHistory(
+                input,
+                result.fractionalFeetInches,
+                result.decimalFeetInches,
+                result.fractionalInches,
+                result.decimalInches
+              );
+              inputBox.value = "";
+              const inputElement = liveInputCell.querySelector("input");
+              inputElement.placeholder =
+                "5' + 1.25 + 3 1/4\" or (5' * 2) + 3\"";
+              liveFractionalFeetInches.textContent = "\u00A0";
+              liveDecimalFeetInches.textContent = "\u00A0";
+              liveFractionalInches.textContent = "\u00A0";
+              liveDecimalInches.textContent = "\u00A0";
+              errorMessage.textContent = "";
+            } catch (error) {
+              errorMessage.textContent = error.message;
+            }
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>
