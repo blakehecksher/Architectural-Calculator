@@ -144,6 +144,16 @@
         border: 1px solid var(--ui-2);
         color: var(--tx);
       }
+      .calc-value {
+        transition: background-color 0.15s ease, color 0.15s ease;
+      }
+      .calc-value:hover {
+        cursor: copy;
+        background: color-mix(in srgb, var(--th-bg) 45%, transparent);
+      }
+      .calc-value:active {
+        background: color-mix(in srgb, var(--th-bg) 65%, transparent);
+      }
     </style>
   </head>
   <body>
@@ -183,10 +193,10 @@
                 autocomplete="off"
               />
             </td>
-            <td id="fFt"></td>
-            <td id="dFt"></td>
-            <td id="fIn"></td>
-            <td id="dIn"></td>
+            <td id="fFt" class="calc-value" title="Click to copy"></td>
+            <td id="dFt" class="calc-value" title="Click to copy"></td>
+            <td id="fIn" class="calc-value" title="Click to copy"></td>
+            <td id="dIn" class="calc-value" title="Click to copy"></td>
           </tr>
         </tbody>
       </table>
@@ -196,10 +206,10 @@
         <td class="input-cell" colspan="4">
           <button class="del">X</button><span class="expr"></span>
         </td>
-        <td class="fFeet"></td>
-        <td class="dFt"></td>
-        <td class="fInch"></td>
-        <td class="dIn"></td>
+        <td class="fFeet calc-value" title="Click to copy"></td>
+        <td class="dFt calc-value" title="Click to copy"></td>
+        <td class="fInch calc-value" title="Click to copy"></td>
+        <td class="dIn calc-value" title="Click to copy"></td>
       </tr>
     </template>
     <script type="module">
@@ -349,6 +359,34 @@
           /* ignore live parse errors */
         }
       }
+
+      async function copyText(text) {
+        if (!text) return;
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(text);
+          return;
+        }
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "absolute";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+
+      async function copyCalculatedValue(cell) {
+        const value = cell.textContent.trim();
+        if (!value) return;
+        try {
+          await copyText(value);
+          err.textContent = `Copied: ${value}`;
+        } catch {
+          err.textContent = "Could not copy to clipboard.";
+        }
+      }
       box.addEventListener("input", () => {
         err.textContent = ""; // keep banner clear during typing
         lastAttemptHadError = false;
@@ -371,6 +409,12 @@
           err.textContent = ex.message || ex;
           lastAttemptHadError = true;
         }
+      });
+
+      document.addEventListener("click", (e) => {
+        const cell = e.target.closest(".calc-value");
+        if (!cell) return;
+        copyCalculatedValue(cell);
       });
 
       function addRow(expr, tot) {
