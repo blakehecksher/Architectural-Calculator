@@ -7,16 +7,16 @@
     <style>
       :root {
         /* neutrals */
-        --bg: #fffcf0; /* paper          */
-        --bg-2: #f2f0e5; /* base‑50        */
-        --ui: #e6e4d9; /* base‑100       */
-        --ui-2: #dad8ce; /* base‑150       */
-        --ui-3: #cecdc3; /* base‑200       */
-        --tx: #100f0f; /* black          */
-        --tx-2: #6f6e69; /* base‑600       */
-        --tx-3: #575653; /* base‑700       */
+        --bg: #fffcf0; /* paper */
+        --bg-2: #f2f0e5; /* base-50 */
+        --ui: #e6e4d9; /* base-100 */
+        --ui-2: #dad8ce; /* base-150 */
+        --ui-3: #cecdc3; /* base-200 */
+        --tx: #100f0f; /* black */
+        --tx-2: #6f6e69; /* base-600 */
+        --tx-3: #575653; /* base-700 */
 
-        /* accent colours (grabbed straight from Flexoki if you need them) */
+        /* accent colours */
         --re: #af3029;
         --or: #bc5215;
         --ye: #ad8301;
@@ -26,7 +26,6 @@
         --pu: #5e409d;
         --ma: #a02f6f;
 
-        /* map to your existing custom properties so nothing else needs editing */
         --bg-color: var(--bg);
         --text-color: var(--tx);
         --table-border: var(--ui);
@@ -42,11 +41,14 @@
         margin: 0 auto;
         padding: 20px;
         background: var(--bg-color);
+        color: var(--text-color);
       }
+
       .tol-bar {
         text-align: right;
         margin-bottom: 10px;
       }
+
       .tol-btn {
         display: inline-block;
         padding: 4px 8px;
@@ -60,14 +62,17 @@
         font-size: 14px;
         line-height: 18px;
       }
+
       .tol-btn.active {
         background: var(--th-bg);
       }
+
       table {
         width: 100%;
         border-collapse: collapse;
         table-layout: fixed;
       }
+
       th,
       td {
         border: 1px solid var(--table-border);
@@ -75,20 +80,31 @@
         text-align: left;
         vertical-align: middle;
       }
+
       th {
         background: var(--th-bg);
         text-align: center;
       }
+
       tr:nth-child(even) {
         background: var(--tr-even);
       }
+
       .input-cell {
         background: var(--bg);
         position: relative;
       }
+
       #liveInputCell {
         box-shadow: inset 0 0 0 2px lightblue;
       }
+
+      #box {
+        background: var(--bg);
+        border: none;
+        color: var(--tx);
+      }
+
       .input-cell input {
         width: 100%;
         border: none;
@@ -97,11 +113,15 @@
         color: var(--text-color);
         outline: none;
       }
+
       .placeholder input::placeholder {
         color: var(--placeholder);
       }
+
       .del {
-        display: none;
+        display: flex;
+        opacity: 0;
+        pointer-events: none;
         position: absolute;
         right: 10px;
         top: 50%;
@@ -117,6 +137,7 @@
         align-items: center;
         cursor: pointer;
       }
+
       .del:hover,
       .del:focus {
         transform: translateY(-50%);
@@ -124,49 +145,47 @@
       }
 
       tr:hover .del,
-      .del:hover {
-        /* keep the button’s flex centering instead of switching to block */
-        display: flex;
+      tr:focus-within .del,
+      .del:hover,
+      .del:focus {
+        opacity: 1;
+        pointer-events: auto;
       }
-      .del-btn,
-      .del-btn:hover,
-      .del-btn:focus {
-        transform: none !important; /* cancel any translate / scale */
-        top: 0 !important; /* if earlier CSS nudged it      */
-      }
+
       .error {
         color: red;
         min-height: 20px;
         margin-top: 6px;
       }
-      #box input[type="text"] {
-        background: var(--bg); /* Flexoki paper   */
-        border: 1px solid var(--ui-2);
-        color: var(--tx);
-      }
-      .calc-value {
+
+      .calc-value,
+      .input-copy {
         transition: background-color 0.15s ease, color 0.15s ease;
       }
-      .calc-value:hover {
+
+      .calc-value:hover,
+      .input-copy:hover {
         cursor: copy;
         background: color-mix(in srgb, var(--th-bg) 45%, transparent);
       }
-      .calc-value:active {
+
+      .calc-value:active,
+      .input-copy:active {
         background: color-mix(in srgb, var(--th-bg) 65%, transparent);
       }
     </style>
   </head>
   <body>
     <h1>Feet and Inches Calculator</h1>
-    <div class="tol-bar">
-      <button class="tol-btn" data-den="2">1/2″</button>
-      <button class="tol-btn" data-den="4">1/4″</button>
-      <button class="tol-btn" data-den="8">1/8″</button>
-      <button class="tol-btn active" data-den="16">1/16″</button>
-      <button class="tol-btn" data-den="32">1/32″</button>
-      <button class="tol-btn" data-den="64">1/64″</button>
-      <button class="tol-btn" data-den="128">1/128″</button>
-      <button class="tol-btn" data-den="256">1/256″</button>
+    <div class="tol-bar" role="group" aria-label="Rounding precision">
+      <button class="tol-btn" data-den="2" aria-pressed="false">1/2&#8243;</button>
+      <button class="tol-btn" data-den="4" aria-pressed="false">1/4&#8243;</button>
+      <button class="tol-btn" data-den="8" aria-pressed="false">1/8&#8243;</button>
+      <button class="tol-btn active" data-den="16" aria-pressed="true">1/16&#8243;</button>
+      <button class="tol-btn" data-den="32" aria-pressed="false">1/32&#8243;</button>
+      <button class="tol-btn" data-den="64" aria-pressed="false">1/64&#8243;</button>
+      <button class="tol-btn" data-den="128" aria-pressed="false">1/128&#8243;</button>
+      <button class="tol-btn" data-den="256" aria-pressed="false">1/256&#8243;</button>
     </div>
     <div class="error" id="err" aria-live="assertive"></div>
     <div class="history">
@@ -189,8 +208,9 @@
             <td id="liveInputCell" class="input-cell" colspan="4">
               <input
                 id="box"
-                placeholder="5&#8217; + 3 1/4″ or (1.5&#8217; * 2)"
+                placeholder="5&#8217; + 3 1/4&#8243; or (1.5&#8217; * 2)"
                 autocomplete="off"
+                title="Double-click to copy"
               />
             </td>
             <td id="fFt" class="calc-value" title="Click to copy"></td>
@@ -203,8 +223,8 @@
     </div>
     <template id="row-tpl">
       <tr data-inches="">
-        <td class="input-cell" colspan="4">
-          <button class="del">X</button><span class="expr"></span>
+        <td class="input-cell input-copy" colspan="4" title="Click to copy">
+          <button class="del" aria-label="Delete row">X</button><span class="expr"></span>
         </td>
         <td class="fFeet calc-value" title="Click to copy"></td>
         <td class="dFt calc-value" title="Click to copy"></td>
@@ -214,33 +234,32 @@
     </template>
     <script type="module">
       const dens = [2, 4, 8, 16, 32, 64, 128, 256];
-      let active = 3,
-        DEN = dens[active];
+      let active = 3;
+      let DEN = dens[active];
 
-      const QUOTE_FT = "[\\'’′]"; // straight, curly apostrophe, prime
-      const QUOTE_IN = '["”″]'; // straight, curly quote, double prime
+      const QUOTE_FT = "[\\'\\u2019\\u2032]"; // straight, curly apostrophe, prime
+      const QUOTE_IN = '["\\u201d\\u2033]'; // straight, curly quote, double prime
+
       function normalize(s) {
         return s
-          .replace(/[’‘′]/g, "'")
-          .replace(/[“”″]/g, '"')
-          .replace(/[×x]/gi, "*")
-          .replace(/÷/g, "/")
-          .replace(/[–—]/g, "-")
+          .replace(/[\u2019\u2018\u2032]/g, "'")
+          .replace(/[\u201c\u201d\u2033]/g, '"')
+          .replace(/[\u00d7x]/gi, "*")
+          .replace(/\u00f7/g, "/")
+          .replace(/[\u2013\u2014]/g, "-")
           .replace(/,/g, "")
-          .replace(/\s*(['"’′″])\s*/g, "$1"); // ← added line
+          .replace(/\s*(['"\u2019\u2032\u2033])\s*/g, "$1");
       }
-      /* ─── feet / inch token regexes  (double‑escaped!) ──────────────────── */
+
       const RX_MIXED = new RegExp(
         `(-?(?:\\d*\\.?\\d+)(?:\\s+\\d+\\/\\d+)?)\\s*${QUOTE_FT}\\s*` +
           `(-?(?:\\d*\\.?\\d+)(?:\\s+\\d+\\/\\d+)?)?\\s*${QUOTE_IN}`,
         "g"
       );
-
       const RX_FT = new RegExp(
         `(-?(?:\\d*\\.?\\d+)(?:\\s+\\d+\\/\\d+)?)\\s*${QUOTE_FT}`,
         "g"
       );
-
       const RX_IN = new RegExp(
         `(-?(?:\\d*\\.?\\d+)(?:\\s+\\d+\\/\\d+)?)\\s*${QUOTE_IN}`,
         "g"
@@ -250,33 +269,33 @@
       const RX_MIXED_FRAC = /(-?\d+)\s+(\d+\/\d+)/g;
       const RX_PURE_FRAC = /-?\d+\/\d+/g;
       const tolBtns = [...document.querySelectorAll(".tol-btn")];
-      const box = document.getElementById("box"),
-        err = document.getElementById("err");
-      let lastAttemptHadError = false;
-      const historyBody = document.querySelector("#tbl tbody"),
-        liveRow = document.getElementById("liveRow");
-      const fFtEl = document.getElementById("fFt"),
-        dFtEl = document.getElementById("dFt");
-      const fInEl = document.getElementById("fIn"),
-        dInEl = document.getElementById("dIn");
-      const rows = [],
-        gcd = (a, b) => (b ? gcd(b, a % b) : a);
+      const box = document.getElementById("box");
+      const err = document.getElementById("err");
+      const historyBody = document.querySelector("#tbl tbody");
+      const liveRow = document.getElementById("liveRow");
+      const fFtEl = document.getElementById("fFt");
+      const dFtEl = document.getElementById("dFt");
+      const fInEl = document.getElementById("fIn");
+      const dInEl = document.getElementById("dIn");
+      const rows = [];
+      const gcd = (a, b) => (b ? gcd(b, a % b) : a);
       const roundNearest = (v, d) => Math.round(v * d) / d;
 
       const mixed = (val, d) => {
         const sign = val < 0 ? "-" : "";
         let abs = Math.abs(val);
         abs = roundNearest(abs, d);
-        let whole = Math.floor(abs),
-          frac = abs - whole;
+        const whole = Math.floor(abs);
+        const frac = abs - whole;
         if (frac === 0) return sign + whole;
-        let num = Math.round(frac * d),
-          den = d;
+        let num = Math.round(frac * d);
+        let den = d;
         const g = gcd(num, den);
         num /= g;
         den /= g;
         return sign + (whole ? whole + " " : "") + num + "/" + den;
       };
+
       const in2ft = (inches) => ({
         ft: Math.floor(inches / 12),
         in: inches % 12,
@@ -287,6 +306,7 @@
         if (/^\-?\d+\s+\d+\/\d+$/.test(str)) {
           const [whole, frac] = str.split(/\s+/);
           const [num, den] = frac.split("/");
+          if (parseInt(den) === 0) throw new SyntaxError("Invalid fraction");
           return (
             Math.sign(parseFloat(whole)) *
             (Math.abs(parseFloat(whole)) + parseInt(num) / parseInt(den))
@@ -294,10 +314,12 @@
         }
         if (/^-?\d+\/\d+$/.test(str)) {
           const [num, den] = str.split("/");
+          if (parseInt(den) === 0) throw new SyntaxError("Invalid fraction");
           return parseInt(num) / parseInt(den);
         }
         return parseFloat(str);
       }
+
       const pre = (s) =>
         normalize(s)
           .replace(
@@ -308,15 +330,19 @@
           .replace(RX_IN, (m, i) => parseFrac(i))
           .replace(RX_MIXED_FRAC, (m, w, f) => `(${w}+(${f}))`)
           .replace(RX_PURE_FRAC, (m) => `(${m})`);
+
       const evaluate = (expr) => {
-        if (/[^0-9+\-*/().'"\s]/.test(expr))
+        if (/[^0-9+\-*/().'"\s]/.test(expr)) {
           throw new SyntaxError("Invalid input");
+        }
         return Function(`"use strict";return (${expr})`)();
       };
+
       const parseInput = (s) => {
         const val = evaluate(pre(s));
-        if (typeof val !== "number" || isNaN(val))
+        if (typeof val !== "number" || !Number.isFinite(val)) {
           throw new SyntaxError("Invalid result");
+        }
         return val;
       };
 
@@ -340,11 +366,17 @@
         };
       };
 
+      function clearLiveOutputs() {
+        [fFtEl, dFtEl, fInEl, dInEl].forEach((el) => {
+          el.textContent = "";
+        });
+      }
+
       function refreshLive() {
         err.textContent = "";
         const expr = box.value.trim();
         if (!expr) {
-          [fFtEl, dFtEl, fInEl, dInEl].forEach((el) => (el.textContent = ""));
+          clearLiveOutputs();
           liveRow.classList.add("placeholder");
           return;
         }
@@ -356,7 +388,7 @@
           fInEl.textContent = out.fIn;
           dInEl.textContent = out.dIn;
         } catch (e) {
-          /* ignore live parse errors */
+          clearLiveOutputs();
         }
       }
 
@@ -377,8 +409,13 @@
         document.body.removeChild(ta);
       }
 
-      async function copyCalculatedValue(cell) {
-        const value = cell.textContent.trim();
+      async function copyCalculatedValue(target) {
+        const value =
+          target instanceof HTMLInputElement
+            ? target.value.trim()
+            : target.classList.contains("input-copy")
+            ? target.querySelector(".expr").textContent.trim()
+            : target.textContent.trim();
         if (!value) return;
         try {
           await copyText(value);
@@ -387,11 +424,16 @@
           err.textContent = "Could not copy to clipboard.";
         }
       }
+
       box.addEventListener("input", () => {
-        err.textContent = ""; // keep banner clear during typing
-        lastAttemptHadError = false;
+        err.textContent = "";
         refreshLive();
       });
+
+      box.addEventListener("dblclick", () => {
+        copyCalculatedValue(box);
+      });
+
       box.addEventListener("keydown", (e) => {
         if (e.key !== "Enter") return;
         const expr = box.value.trim();
@@ -407,14 +449,20 @@
           refreshLive();
         } catch (ex) {
           err.textContent = ex.message || ex;
-          lastAttemptHadError = true;
         }
       });
 
       document.addEventListener("click", (e) => {
         const cell = e.target.closest(".calc-value");
-        if (!cell) return;
-        copyCalculatedValue(cell);
+        if (cell) {
+          copyCalculatedValue(cell);
+          return;
+        }
+
+        const inputCell = e.target.closest(".input-copy");
+        if (inputCell && !e.target.closest(".del")) {
+          copyCalculatedValue(inputCell);
+        }
       });
 
       function addRow(expr, tot) {
@@ -434,6 +482,7 @@
         historyBody.insertBefore(tr, liveRow.nextSibling);
         rows.push(tr);
       }
+
       function refreshHistory() {
         rows.forEach((tr) => {
           const out = outputs(parseFloat(tr.dataset.inches));
@@ -443,13 +492,19 @@
           tr.querySelector(".dIn").textContent = out.dIn;
         });
       }
+
       function setDen(idx) {
         active = idx;
         DEN = dens[idx];
-        tolBtns.forEach((b, i) => b.classList.toggle("active", i === idx));
+        tolBtns.forEach((b, i) => {
+          const isActive = i === idx;
+          b.classList.toggle("active", isActive);
+          b.setAttribute("aria-pressed", String(isActive));
+        });
         refreshLive();
         refreshHistory();
       }
+
       tolBtns.forEach((b, i) => b.addEventListener("click", () => setDen(i)));
       document.addEventListener("keydown", (e) => {
         if (
@@ -460,6 +515,7 @@
           setDen((active + dir + dens.length) % dens.length);
         }
       });
+
       refreshLive();
     </script>
   </body>
