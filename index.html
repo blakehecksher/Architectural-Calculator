@@ -2,7 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#fffcf0" />
     <title>Feet & Inches Calculator</title>
     <style>
       :root {
@@ -173,6 +177,198 @@
       .input-copy:active {
         background: color-mix(in srgb, var(--th-bg) 65%, transparent);
       }
+
+      /* On-screen keypad is hidden on desktop; shown on small screens. */
+      .keypad {
+        display: none;
+      }
+
+      /* ---------- Mobile layout ---------- */
+      @media (max-width: 820px) {
+        body {
+          padding: 12px 12px 0;
+          /* space for the fixed keypad; refined in JS to its real height */
+          padding-bottom: 320px;
+          -webkit-text-size-adjust: 100%;
+        }
+
+        h1 {
+          font-size: 1.15rem;
+          margin: 2px 0 10px;
+        }
+
+        /* precision selector becomes a horizontal scroll strip */
+        .tol-bar {
+          text-align: left;
+          display: flex;
+          gap: 6px;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          padding-bottom: 6px;
+          margin-bottom: 8px;
+          scrollbar-width: none;
+        }
+        .tol-bar::-webkit-scrollbar {
+          display: none;
+        }
+        .tol-btn {
+          margin-left: 0;
+          flex: 0 0 auto;
+          padding: 8px 12px;
+          font-size: 15px;
+          line-height: 1;
+        }
+
+        .error {
+          margin: 0 0 8px;
+        }
+
+        /* collapse the wide table into stacked cards */
+        thead {
+          display: none;
+        }
+        #tbl,
+        #tbl tbody {
+          display: block;
+          width: 100%;
+        }
+
+        #tbl tbody tr {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          border: 1px solid var(--border);
+          margin-bottom: 8px;
+          background: var(--bg);
+        }
+        /* drop the desktop zebra striping in card mode */
+        #tbl tbody tr:nth-child(even) {
+          background: var(--bg);
+        }
+
+        #tbl tbody td {
+          display: block;
+          border: none;
+          border-top: 1px solid var(--table-border);
+          padding: 8px 10px;
+          min-width: 0;
+          overflow-wrap: anywhere;
+        }
+
+        /* the input / expression cell spans the full card width */
+        .input-cell {
+          grid-column: 1 / -1;
+          border-top: none !important;
+        }
+        .input-copy {
+          padding-right: 40px;
+        }
+
+        /* label + value stacked for each output */
+        .calc-value::before {
+          content: attr(data-label);
+          display: block;
+          font-size: 10px;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
+          color: var(--tx-2);
+          margin-bottom: 3px;
+        }
+        .calc-value {
+          font-size: 15px;
+          min-height: 2.6em;
+        }
+        /* divider between the two output columns */
+        .calc-value:nth-child(even) {
+          border-right: 1px solid var(--table-border);
+        }
+
+        /* live input row = pinned "active" panel */
+        #liveRow {
+          position: sticky;
+          top: 0;
+          z-index: 5;
+          border: 2px solid var(--bl);
+          box-shadow: 0 2px 10px rgba(16, 15, 15, 0.1);
+        }
+        #liveInputCell {
+          box-shadow: none;
+        }
+        #box {
+          font-size: 18px;
+          padding: 4px 2px;
+        }
+
+        /* delete control is always reachable on touch */
+        #tbl tbody .del {
+          opacity: 1;
+          pointer-events: auto;
+        }
+
+        /* ---------- keypad ---------- */
+        .keypad {
+          display: block;
+          position: fixed;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: var(--ui);
+          border-top: 1px solid var(--ui-3);
+          padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px));
+          z-index: 20;
+        }
+        .keys {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          gap: 6px;
+          max-width: 520px;
+          margin: 0 auto;
+        }
+        .key {
+          font-family: monospace;
+          font-size: 20px;
+          line-height: 1;
+          padding: 14px 0;
+          border: 1px solid var(--ui-3);
+          background: var(--bg);
+          color: var(--tx);
+          border-radius: 7px;
+          cursor: pointer;
+          user-select: none;
+          -webkit-user-select: none;
+          -webkit-tap-highlight-color: transparent;
+          touch-action: manipulation;
+        }
+        .key:active {
+          background: var(--ui-2);
+        }
+        .key.mark {
+          color: var(--cy);
+          font-weight: bold;
+        }
+        .key.op {
+          color: var(--or);
+        }
+        .key.back {
+          color: var(--re);
+        }
+        .key[data-k="0"] {
+          grid-column: span 2;
+        }
+        .key.equals {
+          grid-column: span 3;
+          background: var(--bl);
+          color: var(--bg);
+          border-color: var(--bl);
+          font-weight: bold;
+        }
+      }
+
+      /* keypad never intercepts input on devices with a real pointer */
+      @media (min-width: 821px) {
+        .keypad {
+          display: none !important;
+        }
+      }
     </style>
   </head>
   <body>
@@ -213,10 +409,10 @@
                 title="Double-click to copy"
               />
             </td>
-            <td id="fFt" class="calc-value" title="Click to copy"></td>
-            <td id="dFt" class="calc-value" title="Click to copy"></td>
-            <td id="fIn" class="calc-value" title="Click to copy"></td>
-            <td id="dIn" class="calc-value" title="Click to copy"></td>
+            <td id="fFt" class="calc-value" data-label="Ft-In (frac)" title="Click to copy"></td>
+            <td id="dFt" class="calc-value" data-label="Feet (dec)" title="Click to copy"></td>
+            <td id="fIn" class="calc-value" data-label="Inches (frac)" title="Click to copy"></td>
+            <td id="dIn" class="calc-value" data-label="Inches (dec)" title="Click to copy"></td>
           </tr>
         </tbody>
       </table>
@@ -226,12 +422,42 @@
         <td class="input-cell input-copy" colspan="4" title="Click to copy">
           <button class="del" aria-label="Delete row">X</button><span class="expr"></span>
         </td>
-        <td class="fFeet calc-value" title="Click to copy"></td>
-        <td class="dFt calc-value" title="Click to copy"></td>
-        <td class="fInch calc-value" title="Click to copy"></td>
-        <td class="dIn calc-value" title="Click to copy"></td>
+        <td class="fFeet calc-value" data-label="Ft-In (frac)" title="Click to copy"></td>
+        <td class="dFt calc-value" data-label="Feet (dec)" title="Click to copy"></td>
+        <td class="fInch calc-value" data-label="Inches (frac)" title="Click to copy"></td>
+        <td class="dIn calc-value" data-label="Inches (dec)" title="Click to copy"></td>
       </tr>
     </template>
+    <div class="keypad" id="keypad" aria-label="Calculator keypad">
+      <div class="keys">
+        <button class="key mark" data-k="'" aria-label="feet mark">&prime;</button>
+        <button class="key mark" data-k="&quot;" aria-label="inch mark">&Prime;</button>
+        <button class="key op" data-k="(">(</button>
+        <button class="key op" data-k=")">)</button>
+        <button class="key back" data-k="back" aria-label="backspace">&#9003;</button>
+
+        <button class="key" data-k="7">7</button>
+        <button class="key" data-k="8">8</button>
+        <button class="key" data-k="9">9</button>
+        <button class="key op" data-k="/" aria-label="divide">&divide;</button>
+        <button class="key op" data-k="*" aria-label="multiply">&times;</button>
+
+        <button class="key" data-k="4">4</button>
+        <button class="key" data-k="5">5</button>
+        <button class="key" data-k="6">6</button>
+        <button class="key op" data-k="-" aria-label="minus">&minus;</button>
+        <button class="key op" data-k="+" aria-label="plus">+</button>
+
+        <button class="key" data-k="1">1</button>
+        <button class="key" data-k="2">2</button>
+        <button class="key" data-k="3">3</button>
+        <button class="key" data-k=".">.</button>
+        <button class="key" data-k=" " aria-label="space">&#9251;</button>
+
+        <button class="key" data-k="0">0</button>
+        <button class="key equals" data-k="=" aria-label="calculate">=</button>
+      </div>
+    </div>
     <script type="module">
       const dens = [2, 4, 8, 16, 32, 64, 128, 256];
       let active = 3;
@@ -434,8 +660,7 @@
         copyCalculatedValue(box);
       });
 
-      box.addEventListener("keydown", (e) => {
-        if (e.key !== "Enter") return;
+      function commitInput() {
         const expr = box.value.trim();
         if (!expr) {
           err.textContent = "Input cannot be empty.";
@@ -450,6 +675,11 @@
         } catch (ex) {
           err.textContent = ex.message || ex;
         }
+      }
+
+      box.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter") return;
+        commitInput();
       });
 
       document.addEventListener("click", (e) => {
@@ -504,6 +734,63 @@
         refreshLive();
         refreshHistory();
       }
+
+      /* ---------- on-screen keypad (touch / small screens) ---------- */
+      const keypad = document.getElementById("keypad");
+
+      function insertAtCursor(text) {
+        box.focus();
+        const start = box.selectionStart ?? box.value.length;
+        const end = box.selectionEnd ?? box.value.length;
+        box.value = box.value.slice(0, start) + text + box.value.slice(end);
+        const pos = start + text.length;
+        box.setSelectionRange(pos, pos);
+        err.textContent = "";
+        refreshLive();
+      }
+
+      function backspace() {
+        box.focus();
+        let start = box.selectionStart ?? box.value.length;
+        const end = box.selectionEnd ?? box.value.length;
+        if (start === end) {
+          if (start === 0) return;
+          start -= 1;
+        }
+        box.value = box.value.slice(0, start) + box.value.slice(end);
+        box.setSelectionRange(start, start);
+        err.textContent = "";
+        refreshLive();
+      }
+
+      // Keep the caret in the input when tapping keys (prevents blur/flicker).
+      keypad.addEventListener("mousedown", (e) => {
+        if (e.target.closest(".key")) e.preventDefault();
+      });
+
+      keypad.addEventListener("click", (e) => {
+        const key = e.target.closest(".key");
+        if (!key) return;
+        if (key.classList.contains("back")) return backspace();
+        if (key.classList.contains("equals")) return commitInput();
+        insertAtCursor(key.dataset.k);
+      });
+
+      // Suppress the native virtual keyboard when the custom pad is active,
+      // and reserve page space so the fixed keypad never covers content.
+      const touchMode = window.matchMedia("(max-width: 820px)");
+      function syncTouchMode() {
+        if (touchMode.matches) {
+          box.setAttribute("inputmode", "none");
+          document.body.style.paddingBottom = keypad.offsetHeight + 16 + "px";
+        } else {
+          box.removeAttribute("inputmode");
+          document.body.style.paddingBottom = "";
+        }
+      }
+      touchMode.addEventListener("change", syncTouchMode);
+      window.addEventListener("resize", syncTouchMode);
+      syncTouchMode();
 
       tolBtns.forEach((b, i) => b.addEventListener("click", () => setDen(i)));
       document.addEventListener("keydown", (e) => {
