@@ -197,26 +197,22 @@
           margin: 2px 0 10px;
         }
 
-        /* precision selector becomes a horizontal scroll strip */
+        /* precision selector fits all steps across one row */
         .tol-bar {
           text-align: left;
           display: flex;
-          gap: 6px;
-          overflow-x: auto;
-          -webkit-overflow-scrolling: touch;
-          padding-bottom: 6px;
+          gap: 2px;
           margin-bottom: 8px;
-          scrollbar-width: none;
-        }
-        .tol-bar::-webkit-scrollbar {
-          display: none;
         }
         .tol-btn {
           margin-left: 0;
-          flex: 0 0 auto;
-          padding: 8px 12px;
-          font-size: 15px;
+          flex: 1 1 0;
+          min-width: 0;
+          padding: 7px 1px;
+          font-size: 10.5px;
           line-height: 1;
+          text-align: center;
+          white-space: nowrap;
         }
 
         .error {
@@ -348,18 +344,37 @@
         .key.op {
           color: var(--or);
         }
-        .key.back {
-          color: var(--re);
-        }
         .key[data-k="0"] {
           grid-column: span 2;
         }
+        /* full-color utility keys */
+        .key.back {
+          grid-column: span 1;
+          background: var(--re);
+          color: var(--bg);
+          border-color: var(--re);
+        }
+        .key.space {
+          grid-column: span 2;
+          background: var(--tx-2);
+          color: var(--bg);
+          border-color: var(--tx-2);
+        }
         .key.equals {
-          grid-column: span 3;
+          grid-column: span 2;
           background: var(--bl);
           color: var(--bg);
           border-color: var(--bl);
           font-weight: bold;
+        }
+        .key.back:active {
+          background: color-mix(in srgb, var(--re) 82%, black);
+        }
+        .key.space:active {
+          background: color-mix(in srgb, var(--tx-2) 82%, black);
+        }
+        .key.equals:active {
+          background: color-mix(in srgb, var(--bl) 82%, black);
         }
       }
 
@@ -430,10 +445,10 @@
     </template>
     <div class="keypad" id="keypad" aria-label="Calculator keypad">
       <div class="keys">
-        <button class="key mark" data-k="'" aria-label="feet mark">&prime;</button>
-        <button class="key mark" data-k="&quot;" aria-label="inch mark">&Prime;</button>
         <button class="key op" data-k="(">(</button>
         <button class="key op" data-k=")">)</button>
+        <button class="key mark" data-k="'" aria-label="feet mark">&prime;</button>
+        <button class="key mark" data-k="&quot;" aria-label="inch mark">&Prime;</button>
         <button class="key back" data-k="back" aria-label="backspace">&#9003;</button>
 
         <button class="key" data-k="7">7</button>
@@ -451,10 +466,10 @@
         <button class="key" data-k="1">1</button>
         <button class="key" data-k="2">2</button>
         <button class="key" data-k="3">3</button>
-        <button class="key" data-k=".">.</button>
-        <button class="key" data-k=" " aria-label="space">&#9251;</button>
+        <button class="key space" data-k=" " aria-label="space">&#9251;</button>
 
         <button class="key" data-k="0">0</button>
+        <button class="key" data-k=".">.</button>
         <button class="key equals" data-k="=" aria-label="calculate">=</button>
       </div>
     </div>
