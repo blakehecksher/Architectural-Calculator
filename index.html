@@ -445,11 +445,11 @@
     </template>
     <div class="keypad" id="keypad" aria-label="Calculator keypad">
       <div class="keys">
+        <button class="key back" data-k="back" aria-label="backspace">&#9003;</button>
+        <button class="key mark" data-k="&quot;" aria-label="inch mark">&Prime;</button>
+        <button class="key mark" data-k="'" aria-label="feet mark">&prime;</button>
         <button class="key op" data-k="(">(</button>
         <button class="key op" data-k=")">)</button>
-        <button class="key mark" data-k="'" aria-label="feet mark">&prime;</button>
-        <button class="key mark" data-k="&quot;" aria-label="inch mark">&Prime;</button>
-        <button class="key back" data-k="back" aria-label="backspace">&#9003;</button>
 
         <button class="key" data-k="7">7</button>
         <button class="key" data-k="8">8</button>
@@ -474,41 +474,12 @@
       </div>
     </div>
     <script type="module">
+      import { parseInput, formatOutputs } from "./calc.js";
+
       const dens = [2, 4, 8, 16, 32, 64, 128, 256];
       let active = 3;
       let DEN = dens[active];
 
-      const QUOTE_FT = "[\\'\\u2019\\u2032]"; // straight, curly apostrophe, prime
-      const QUOTE_IN = '["\\u201d\\u2033]'; // straight, curly quote, double prime
-
-      function normalize(s) {
-        return s
-          .replace(/[\u2019\u2018\u2032]/g, "'")
-          .replace(/[\u201c\u201d\u2033]/g, '"')
-          .replace(/[\u00d7x]/gi, "*")
-          .replace(/\u00f7/g, "/")
-          .replace(/[\u2013\u2014]/g, "-")
-          .replace(/,/g, "")
-          .replace(/\s*(['"\u2019\u2032\u2033])\s*/g, "$1");
-      }
-
-      const RX_MIXED = new RegExp(
-        `(-?(?:\\d*\\.?\\d+)(?:\\s+\\d+\\/\\d+)?)\\s*${QUOTE_FT}\\s*` +
-          `(-?(?:\\d*\\.?\\d+)(?:\\s+\\d+\\/\\d+)?)?\\s*${QUOTE_IN}`,
-        "g"
-      );
-      const RX_FT = new RegExp(
-        `(-?(?:\\d*\\.?\\d+)(?:\\s+\\d+\\/\\d+)?)\\s*${QUOTE_FT}`,
-        "g"
-      );
-      const RX_IN = new RegExp(
-        `(-?(?:\\d*\\.?\\d+)(?:\\s+\\d+\\/\\d+)?)\\s*${QUOTE_IN}`,
-        "g"
-      );
-
-      // Fractions without unit marks (e.g., "5 5/8", "3/4")
-      const RX_MIXED_FRAC = /(-?\d+)\s+(\d+\/\d+)/g;
-      const RX_PURE_FRAC = /-?\d+\/\d+/g;
       const tolBtns = [...document.querySelectorAll(".tol-btn")];
       const box = document.getElementById("box");
       const err = document.getElementById("err");
@@ -519,94 +490,6 @@
       const fInEl = document.getElementById("fIn");
       const dInEl = document.getElementById("dIn");
       const rows = [];
-      const gcd = (a, b) => (b ? gcd(b, a % b) : a);
-      const roundNearest = (v, d) => Math.round(v * d) / d;
-
-      const mixed = (val, d) => {
-        const sign = val < 0 ? "-" : "";
-        let abs = Math.abs(val);
-        abs = roundNearest(abs, d);
-        const whole = Math.floor(abs);
-        const frac = abs - whole;
-        if (frac === 0) return sign + whole;
-        let num = Math.round(frac * d);
-        let den = d;
-        const g = gcd(num, den);
-        num /= g;
-        den /= g;
-        return sign + (whole ? whole + " " : "") + num + "/" + den;
-      };
-
-      const in2ft = (inches) => ({
-        ft: Math.floor(inches / 12),
-        in: inches % 12,
-      });
-
-      function parseFrac(str) {
-        str = str.trim();
-        if (/^\-?\d+\s+\d+\/\d+$/.test(str)) {
-          const [whole, frac] = str.split(/\s+/);
-          const [num, den] = frac.split("/");
-          if (parseInt(den) === 0) throw new SyntaxError("Invalid fraction");
-          return (
-            Math.sign(parseFloat(whole)) *
-            (Math.abs(parseFloat(whole)) + parseInt(num) / parseInt(den))
-          );
-        }
-        if (/^-?\d+\/\d+$/.test(str)) {
-          const [num, den] = str.split("/");
-          if (parseInt(den) === 0) throw new SyntaxError("Invalid fraction");
-          return parseInt(num) / parseInt(den);
-        }
-        return parseFloat(str);
-      }
-
-      const pre = (s) =>
-        normalize(s)
-          .replace(
-            RX_MIXED,
-            (m, f, i) => parseFrac(f) * 12 + (i ? parseFrac(i) : 0)
-          )
-          .replace(RX_FT, (m, f) => parseFrac(f) * 12)
-          .replace(RX_IN, (m, i) => parseFrac(i))
-          .replace(RX_MIXED_FRAC, (m, w, f) => `(${w}+(${f}))`)
-          .replace(RX_PURE_FRAC, (m) => `(${m})`);
-
-      const evaluate = (expr) => {
-        if (/[^0-9+\-*/().'"\s]/.test(expr)) {
-          throw new SyntaxError("Invalid input");
-        }
-        return Function(`"use strict";return (${expr})`)();
-      };
-
-      const parseInput = (s) => {
-        const val = evaluate(pre(s));
-        if (typeof val !== "number" || !Number.isFinite(val)) {
-          throw new SyntaxError("Invalid result");
-        }
-        return val;
-      };
-
-      const outputs = (tot) => {
-        const sign = tot < 0 ? "-" : "";
-        const abs = Math.abs(tot);
-        let { ft, in: inch } = in2ft(abs);
-        inch = roundNearest(inch, DEN);
-        if (inch >= 12) {
-          ft++;
-          inch -= 12;
-        }
-        return {
-          fFt: `${sign}${mixed(ft, DEN)}'-${mixed(inch, DEN)}"`,
-          dFt: `${sign}${(abs / 12)
-            .toFixed(5)
-            .replace(/\.0+$|(?<=\d)0+$/, "")}'`,
-          fIn: `${sign}${mixed(abs, DEN)}"`,
-          dIn: `${sign}${abs.toFixed(5).replace(/\.0+$|(?<=\d)0+$/, "")}"`,
-          raw: tot,
-        };
-      };
-
       function clearLiveOutputs() {
         [fFtEl, dFtEl, fInEl, dInEl].forEach((el) => {
           el.textContent = "";
@@ -623,7 +506,7 @@
         }
         liveRow.classList.remove("placeholder");
         try {
-          const out = outputs(parseInput(expr));
+          const out = formatOutputs(parseInput(expr), DEN);
           fFtEl.textContent = out.fFt;
           dFtEl.textContent = out.dFt;
           fInEl.textContent = out.fIn;
@@ -711,7 +594,7 @@
       });
 
       function addRow(expr, tot) {
-        const out = outputs(tot);
+        const out = formatOutputs(tot, DEN);
         const tpl = document.getElementById("row-tpl").content.cloneNode(true);
         const tr = tpl.querySelector("tr");
         tr.dataset.inches = tot;
@@ -730,7 +613,7 @@
 
       function refreshHistory() {
         rows.forEach((tr) => {
-          const out = outputs(parseFloat(tr.dataset.inches));
+          const out = formatOutputs(parseFloat(tr.dataset.inches), DEN);
           tr.querySelector(".fFeet").textContent = out.fFt;
           tr.querySelector(".dFt").textContent = out.dFt;
           tr.querySelector(".fInch").textContent = out.fIn;
