@@ -84,40 +84,29 @@
          at exactly 50% — hence the width below. */
       .tol-bar {
         display: flex;
-        align-items: flex-end;
-        padding: 8px 0 0;
-        /* paper strip so the tabs read as raised off it — the header row
-           below is --bg-2 and would otherwise blend into one beige slab */
-        background: var(--bg);
+        justify-content: flex-end;
+        /* matches the header row, so the empty half left of the tabs reads as
+           part of the Input column's header rather than a stray box */
+        background: var(--bg-2);
         border-bottom: 1px solid var(--ui-2);
-      }
-
-      .tol-bar .label {
-        margin-right: auto;
-        padding: 0 0 9px 10px;
-        font-size: 11px;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        color: var(--tx-3);
       }
 
       .tol-tabs {
         display: flex;
-        gap: 3px;
-        width: calc(50% - 8px);
-        margin-right: 8px;
+        /* flush to the top and right of the card, spanning exactly the
+           results half so each segment lands under Feet / Inches */
+        width: 50%;
       }
 
       .tol-btn {
         flex: 1 1 0;
         min-width: 0;
-        padding: 6px 2px 7px;
-        border: 1px solid var(--ui-2);
-        /* tab shape: top-rounded, and the bottom edge laps over the bar's
-           hairline so the active one connects to the table below */
-        border-radius: 7px 7px 0 0;
-        margin-bottom: -1px;
-        background: var(--bg-2);
+        padding: 7px 2px 8px;
+        /* one block, split by dividers rather than separate chips */
+        border: none;
+        border-left: 1px solid var(--ui-2);
+        border-radius: 0;
+        background: var(--bg);
         color: var(--tx-3);
         cursor: pointer;
         user-select: none;
@@ -130,9 +119,12 @@
           border-color 0.12s ease;
       }
 
+      .tol-btn:first-child {
+        border-top-left-radius: 8px;
+      }
+
       .tol-btn:hover {
-        border-color: var(--ui-3);
-        background: var(--bg);
+        background: color-mix(in srgb, var(--ui) 45%, var(--bg));
         color: var(--tx);
       }
 
@@ -334,12 +326,14 @@
         background: color-mix(in srgb, var(--ui) 85%, transparent);
       }
 
+      /* Inset shadow rather than background, so the flash sits *over* whatever
+         the cell's own background is (the mobile expression bar is tinted). */
       @keyframes copied {
         from {
-          background: color-mix(in srgb, var(--gr) 30%, transparent);
+          box-shadow: inset 0 0 0 999px color-mix(in srgb, var(--gr) 30%, transparent);
         }
         to {
-          background: transparent;
+          box-shadow: inset 0 0 0 999px transparent;
         }
       }
 
@@ -428,9 +422,6 @@
         .tol-btn .mk {
           display: none;
         }
-        .tol-bar .label {
-          font-size: 10px;
-        }
       }
 
       /* On-screen keypad is hidden on desktop; shown on small screens. */
@@ -464,20 +455,16 @@
           background: transparent;
           border-bottom: 1px solid var(--ui-3);
         }
-        .tol-bar .label {
-          display: none;
-        }
         .tol-tabs {
           gap: 3px;
           width: 100%;
-          margin-right: 0;
         }
         .tol-btn {
           padding: 9px 0;
+          /* phones keep discrete chips — restore what the web block sheds */
+          border: 1px solid var(--ui-3);
           border-radius: 7px;
-          margin-bottom: 0;
           background: var(--bg);
-          border-color: var(--ui-3);
           /* eight chips share the width, so the label scales with the screen
              rather than spilling out of its button on narrow phones */
           font-size: clamp(9px, 2.55vw, 12px);
@@ -549,6 +536,12 @@
            button sits on top of the expression */
         #tbl tbody td.input-copy {
           padding-right: 38px;
+          /* tinted bar heads each saved card, so scrolling back through past
+             calculations you can pick out the inputs at a glance */
+          background: var(--ui);
+        }
+        #tbl tbody td.input-copy:active {
+          background: var(--ui-2);
         }
 
         /* label + value stacked for each output */
@@ -778,7 +771,6 @@
     </div>
     <div class="history">
       <div class="tol-bar" id="tolBar">
-        <span class="label">Round to</span>
         <div class="tol-tabs" role="group" aria-label="Rounding precision">
           <button class="tol-btn" data-den="2" aria-pressed="false" aria-label="half inch">1/2<span class="mk">&#8243;</span></button>
           <button class="tol-btn" data-den="4" aria-pressed="false" aria-label="quarter inch">1/4<span class="mk">&#8243;</span></button>
