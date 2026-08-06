@@ -82,20 +82,27 @@
          each pair lines up under Feet / Inches. The table is fixed-layout
          with 8 equal columns and Input spans 4, so the results group starts
          at exactly 50% — hence the width below. */
+      /* The tabs sit *on top of* the card rather than inside it: the block
+         protrudes above the card's top edge over the results half, and its
+         bottom laps the card's border so the two share one outline. */
       .tol-bar {
         display: flex;
         justify-content: flex-end;
-        /* matches the header row, so the empty half left of the tabs reads as
-           part of the Input column's header rather than a stray box */
-        background: var(--bg-2);
-        border-bottom: 1px solid var(--ui-2);
+        position: relative;
+        z-index: 1;
+        margin-bottom: -1px;
       }
 
       .tol-tabs {
         display: flex;
-        /* flush to the top and right of the card, spanning exactly the
-           results half so each segment lands under Feet / Inches */
+        /* spans exactly the results half, so each segment lands under
+           Feet / Inches */
         width: 50%;
+        background: var(--bg-2);
+        border: 1px solid var(--ui-2);
+        border-bottom: none;
+        border-radius: var(--radius) var(--radius) 0 0;
+        overflow: hidden;
       }
 
       .tol-btn {
@@ -106,7 +113,7 @@
         border: none;
         border-left: 1px solid var(--ui-2);
         border-radius: 0;
-        background: var(--bg);
+        background: var(--bg-2);
         color: var(--tx-3);
         cursor: pointer;
         user-select: none;
@@ -120,11 +127,11 @@
       }
 
       .tol-btn:first-child {
-        border-top-left-radius: 8px;
+        border-left: none;
       }
 
       .tol-btn:hover {
-        background: color-mix(in srgb, var(--ui) 45%, var(--bg));
+        background: var(--bg);
         color: var(--tx);
       }
 
@@ -162,6 +169,8 @@
       .history {
         border: 1px solid var(--ui-2);
         border-radius: var(--radius);
+        /* the tab block sitting above supplies this corner */
+        border-top-right-radius: 0;
         background: var(--bg);
         box-shadow: var(--shadow-2);
         overflow: hidden;
@@ -452,16 +461,22 @@
           padding: 0 0 8px;
           margin: 0 auto 8px;
           max-width: 520px;
+          z-index: auto;
           background: transparent;
           border-bottom: 1px solid var(--ui-3);
         }
         .tol-tabs {
           gap: 3px;
           width: 100%;
+          /* undo the web block: phones keep discrete chips */
+          background: transparent;
+          border: none;
+          border-radius: 0;
+          overflow: visible;
         }
-        .tol-btn {
+        .tol-btn,
+        .tol-btn:first-child {
           padding: 9px 0;
-          /* phones keep discrete chips — restore what the web block sheds */
           border: 1px solid var(--ui-3);
           border-radius: 7px;
           background: var(--bg);
@@ -769,19 +784,19 @@
       <div class="error" id="err" role="alert" aria-live="assertive"></div>
       <div class="status" id="status" aria-live="polite"></div>
     </div>
-    <div class="history">
-      <div class="tol-bar" id="tolBar">
-        <div class="tol-tabs" role="group" aria-label="Rounding precision">
-          <button class="tol-btn" data-den="2" aria-pressed="false" aria-label="half inch">1/2<span class="mk">&#8243;</span></button>
-          <button class="tol-btn" data-den="4" aria-pressed="false" aria-label="quarter inch">1/4<span class="mk">&#8243;</span></button>
-          <button class="tol-btn" data-den="8" aria-pressed="false" aria-label="eighth inch">1/8<span class="mk">&#8243;</span></button>
-          <button class="tol-btn active" data-den="16" aria-pressed="true" aria-label="sixteenth inch">1/16<span class="mk">&#8243;</span></button>
-          <button class="tol-btn" data-den="32" aria-pressed="false" aria-label="thirty-second inch">1/32<span class="mk">&#8243;</span></button>
-          <button class="tol-btn" data-den="64" aria-pressed="false" aria-label="sixty-fourth inch">1/64<span class="mk">&#8243;</span></button>
-          <button class="tol-btn" data-den="128" aria-pressed="false" aria-label="one hundred twenty-eighth inch">1/128<span class="mk">&#8243;</span></button>
-          <button class="tol-btn" data-den="256" aria-pressed="false" aria-label="two hundred fifty-sixth inch">1/256<span class="mk">&#8243;</span></button>
-        </div>
+    <div class="tol-bar" id="tolBar">
+      <div class="tol-tabs" role="group" aria-label="Rounding precision">
+        <button class="tol-btn" data-den="2" aria-pressed="false" aria-label="half inch">1/2<span class="mk">&#8243;</span></button>
+        <button class="tol-btn" data-den="4" aria-pressed="false" aria-label="quarter inch">1/4<span class="mk">&#8243;</span></button>
+        <button class="tol-btn" data-den="8" aria-pressed="false" aria-label="eighth inch">1/8<span class="mk">&#8243;</span></button>
+        <button class="tol-btn active" data-den="16" aria-pressed="true" aria-label="sixteenth inch">1/16<span class="mk">&#8243;</span></button>
+        <button class="tol-btn" data-den="32" aria-pressed="false" aria-label="thirty-second inch">1/32<span class="mk">&#8243;</span></button>
+        <button class="tol-btn" data-den="64" aria-pressed="false" aria-label="sixty-fourth inch">1/64<span class="mk">&#8243;</span></button>
+        <button class="tol-btn" data-den="128" aria-pressed="false" aria-label="one hundred twenty-eighth inch">1/128<span class="mk">&#8243;</span></button>
+        <button class="tol-btn" data-den="256" aria-pressed="false" aria-label="two hundred fifty-sixth inch">1/256<span class="mk">&#8243;</span></button>
       </div>
+    </div>
+    <div class="history">
       <table id="tbl">
         <thead>
           <tr>
@@ -1236,8 +1251,8 @@
           document.body.style.paddingBottom = keypad.offsetHeight + 16 + "px";
         } else {
           box.removeAttribute("inputmode");
-          // on the web they're tabs on top of the results columns
-          if (tolBar.parentElement !== historyCard) historyCard.prepend(tolBar);
+          // on the web they're tabs sitting on top of the results columns
+          if (tolBar.nextElementSibling !== historyCard) historyCard.before(tolBar);
           document.body.style.paddingBottom = "";
         }
         trackCaret();
