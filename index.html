@@ -6,11 +6,13 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#fffcf0" />
-    <title>Feet & Inches Calculator</title>
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#fffcf0" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#100f0f" media="(prefers-color-scheme: dark)" />
+    <title>Feet &amp; Inches Calculator</title>
     <style>
       :root {
-        /* neutrals */
+        /* ---------- Flexoki, light ---------- */
         --bg: #fffcf0; /* paper */
         --bg-2: #f2f0e5; /* base-50 */
         --ui: #e6e4d9; /* base-100 */
@@ -30,45 +32,156 @@
         --pu: #5e409d;
         --ma: #a02f6f;
 
-        --bg-color: var(--bg);
-        --text-color: var(--tx);
-        --table-border: var(--ui);
-        --th-bg: var(--ui-2);
-        --tr-even: var(--bg-2);
-        --placeholder: var(--tx-2);
-        --border: var(--ui-2);
+        --shadow-1: 0 1px 2px rgba(16, 15, 15, 0.05);
+        --shadow-2: 0 1px 2px rgba(16, 15, 15, 0.05),
+          0 8px 20px rgba(16, 15, 15, 0.06);
+        --press: rgba(16, 15, 15, 0.12);
+
+        --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+          "Liberation Mono", monospace;
+        --radius: 10px;
+      }
+
+      /* Flexoki's dark set — same hues, inverted ramp. */
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #100f0f;
+          --bg-2: #1c1b1a; /* base-950 */
+          --ui: #282726; /* base-900 */
+          --ui-2: #343331; /* base-850 */
+          --ui-3: #403e3c; /* base-800 */
+          --tx: #fffcf0;
+          --tx-2: #878580; /* base-500 */
+          --tx-3: #b7b5ac; /* base-300 */
+
+          --re: #d14d41;
+          --or: #da702c;
+          --ye: #d0a215;
+          --gr: #879a39;
+          --cy: #3aa99f;
+          --bl: #4385be;
+          --pu: #8b7ec8;
+          --ma: #ce5d97;
+
+          --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+          --shadow-2: 0 1px 2px rgba(0, 0, 0, 0.35),
+            0 8px 24px rgba(0, 0, 0, 0.45);
+          --press: rgba(255, 252, 240, 0.14);
+        }
+      }
+
+      * {
+        box-sizing: border-box;
       }
 
       body {
-        font-family: monospace;
+        font-family: var(--mono);
+        font-variant-numeric: tabular-nums;
+        font-size: 14px;
         max-width: 1000px;
         margin: 0 auto;
-        padding: 20px;
-        background: var(--bg-color);
-        color: var(--text-color);
+        padding: 24px 20px 40px;
+        background: var(--bg);
+        color: var(--tx);
+        -webkit-tap-highlight-color: transparent;
       }
 
+      /* ---------- header ---------- */
+      .app-bar {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+
+      h1 {
+        font-size: 1.05rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        margin: 0;
+      }
+
+      .app-bar .sub {
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--tx-2);
+      }
+
+      /* ---------- precision selector ---------- */
       .tol-bar {
-        text-align: right;
-        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 4px;
+        margin-bottom: 12px;
+      }
+
+      .tol-bar .label {
+        margin-right: auto;
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--tx-2);
       }
 
       .tol-btn {
-        display: inline-block;
-        padding: 4px 8px;
-        margin-left: 6px;
-        border: 1px solid var(--border);
-        background: transparent;
-        color: var(--text-color);
+        padding: 5px 9px;
+        border: 1px solid var(--ui-2);
+        border-radius: 7px;
+        background: var(--bg-2);
+        color: var(--tx-2);
         cursor: pointer;
         user-select: none;
-        font-family: monospace;
-        font-size: 14px;
+        font-family: inherit;
+        font-size: 12px;
         line-height: 18px;
+        transition: background-color 0.12s ease, color 0.12s ease,
+          border-color 0.12s ease;
+      }
+
+      .tol-btn:hover {
+        border-color: var(--ui-3);
+        color: var(--tx);
       }
 
       .tol-btn.active {
-        background: var(--th-bg);
+        background: var(--tx);
+        border-color: var(--tx);
+        color: var(--bg);
+        font-weight: 600;
+      }
+
+      :focus-visible {
+        outline: 2px solid var(--bl);
+        outline-offset: 2px;
+      }
+
+      /* ---------- message bar ---------- */
+      .msg-bar {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        min-height: 20px;
+        margin-bottom: 8px;
+        font-size: 12.5px;
+      }
+
+      .error {
+        color: var(--re);
+      }
+
+      .status {
+        color: var(--gr);
+      }
+
+      /* ---------- history card ---------- */
+      .history {
+        border: 1px solid var(--ui-2);
+        border-radius: var(--radius);
+        background: var(--bg);
+        box-shadow: var(--shadow-2);
+        overflow: hidden;
       }
 
       table {
@@ -79,47 +192,183 @@
 
       th,
       td {
-        border: 1px solid var(--table-border);
-        padding: 8px;
+        padding: 9px 10px;
         text-align: left;
         vertical-align: middle;
+        border-bottom: 1px solid var(--ui);
       }
 
       th {
-        background: var(--th-bg);
+        background: var(--bg-2);
+        color: var(--tx-2);
+        font-size: 10.5px;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
         text-align: center;
+        border-bottom: 1px solid var(--ui-2);
       }
 
-      tr:nth-child(even) {
-        background: var(--tr-even);
+      /* hairline between the input group and the results group */
+      thead tr:first-child th:first-child,
+      tbody td:first-child {
+        border-right: 1px solid var(--ui);
+      }
+
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+
+      tbody tr {
+        transition: background-color 0.12s ease;
+      }
+
+      tbody tr:hover {
+        background: color-mix(in srgb, var(--bg-2) 55%, transparent);
+      }
+
+      .calc-value {
+        text-align: right;
+        color: var(--tx);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* keeps rows from collapsing before there's anything to show */
+      .calc-value:empty::after {
+        content: "—";
+        color: var(--ui-3);
+      }
+
+      /* ---------- live row / display ---------- */
+      #liveRow,
+      #liveRow:hover {
+        background: var(--bg-2);
       }
 
       .input-cell {
-        background: var(--bg);
         position: relative;
       }
 
       #liveInputCell {
-        box-shadow: inset 0 0 0 2px lightblue;
+        padding: 6px 8px;
+      }
+
+      /* the calculator readout: an input that always follows its caret,
+         with edge fades marking text scrolled out of view */
+      .display {
+        position: relative;
+        display: block;
+        border: 1px solid var(--ui-2);
+        border-radius: 7px;
+        background: var(--bg);
+        transition: border-color 0.12s ease, box-shadow 0.12s ease;
+      }
+
+      .display:focus-within {
+        border-color: var(--bl);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--bl) 18%, transparent);
+      }
+
+      .display::before,
+      .display::after {
+        content: "";
+        position: absolute;
+        top: 1px;
+        bottom: 1px;
+        width: 22px;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.15s ease;
+        border-radius: 6px;
+      }
+
+      .display::before {
+        left: 1px;
+        background: linear-gradient(to right, var(--bg), transparent);
+      }
+
+      .display::after {
+        right: 1px;
+        background: linear-gradient(to left, var(--bg), transparent);
+      }
+
+      .display.fade-l::before,
+      .display.fade-r::after {
+        opacity: 1;
       }
 
       #box {
-        background: var(--bg);
-        border: none;
-        color: var(--tx);
-      }
-
-      .input-cell input {
+        display: block;
         width: 100%;
         border: none;
         background: transparent;
         font: inherit;
-        color: var(--text-color);
+        font-size: 15px;
+        padding: 7px 10px;
+        color: var(--tx);
         outline: none;
+        caret-color: var(--bl);
       }
 
-      .placeholder input::placeholder {
-        color: var(--placeholder);
+      #box::placeholder {
+        color: var(--tx-2);
+        opacity: 0.7;
+      }
+
+      /* ---------- saved rows ---------- */
+      .input-copy {
+        padding-left: 30px;
+        overflow-wrap: anywhere;
+      }
+
+      .expr {
+        color: var(--tx);
+      }
+
+      .calc-value,
+      .input-copy {
+        transition: background-color 0.15s ease;
+      }
+
+      .calc-value:hover,
+      .input-copy:hover {
+        cursor: copy;
+        background: color-mix(in srgb, var(--ui) 55%, transparent);
+      }
+
+      .calc-value:active,
+      .input-copy:active {
+        background: color-mix(in srgb, var(--ui) 85%, transparent);
+      }
+
+      @keyframes copied {
+        from {
+          background: color-mix(in srgb, var(--gr) 30%, transparent);
+        }
+        to {
+          background: transparent;
+        }
+      }
+
+      .copied {
+        animation: copied 0.65s ease-out;
+      }
+
+      @keyframes row-in {
+        from {
+          opacity: 0;
+          transform: translateY(-4px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      .row-in {
+        animation: row-in 0.18s ease-out;
       }
 
       .del {
@@ -127,55 +376,62 @@
         opacity: 0;
         pointer-events: none;
         position: absolute;
-        right: 10px;
+        left: 8px;
         top: 50%;
         transform: translateY(-50%);
-        width: 20px;
-        height: 20px;
+        width: 18px;
+        height: 18px;
+        padding: 0;
         border-radius: 50%;
-        border: 1px solid #999;
-        background: #e22;
-        color: #fff;
-        font-size: 14px;
+        border: 1px solid var(--ui-3);
+        background: var(--bg);
+        color: var(--tx-2);
+        font: inherit;
+        font-size: 11px;
+        line-height: 1;
         justify-content: center;
         align-items: center;
         cursor: pointer;
+        transition: background-color 0.12s ease, color 0.12s ease,
+          border-color 0.12s ease, opacity 0.12s ease;
       }
 
       .del:hover,
-      .del:focus {
-        transform: translateY(-50%);
-        top: 50%;
+      .del:focus-visible {
+        background: var(--re);
+        border-color: var(--re);
+        color: var(--bg);
       }
 
       tr:hover .del,
-      tr:focus-within .del,
-      .del:hover,
-      .del:focus {
+      tr:focus-within .del {
         opacity: 1;
         pointer-events: auto;
       }
 
-      .error {
-        color: red;
-        min-height: 20px;
-        margin-top: 6px;
+      /* ---------- empty state + hints ---------- */
+      #emptyRow td {
+        text-align: center;
+        color: var(--tx-2);
+        font-size: 12px;
+        padding: 14px 10px;
+        border-right: none;
       }
 
-      .calc-value,
-      .input-copy {
-        transition: background-color 0.15s ease, color 0.15s ease;
+      .hints {
+        margin: 10px 2px 0;
+        font-size: 11.5px;
+        color: var(--tx-2);
+        text-align: right;
       }
 
-      .calc-value:hover,
-      .input-copy:hover {
-        cursor: copy;
-        background: color-mix(in srgb, var(--th-bg) 45%, transparent);
-      }
-
-      .calc-value:active,
-      .input-copy:active {
-        background: color-mix(in srgb, var(--th-bg) 65%, transparent);
+      .hints kbd {
+        font: inherit;
+        color: var(--tx-3);
+        border: 1px solid var(--ui-2);
+        border-radius: 4px;
+        padding: 1px 4px;
+        background: var(--bg-2);
       }
 
       /* On-screen keypad is hidden on desktop; shown on small screens. */
@@ -192,36 +448,62 @@
           -webkit-text-size-adjust: 100%;
         }
 
+        .app-bar {
+          margin-bottom: 10px;
+        }
+
         h1 {
-          font-size: 1.15rem;
-          margin: 2px 0 10px;
+          font-size: 1rem;
+        }
+
+        .app-bar .sub {
+          display: none;
         }
 
         /* precision selector fits all steps across one row */
         .tol-bar {
-          text-align: left;
-          display: flex;
           gap: 2px;
           margin-bottom: 8px;
         }
+        .tol-bar .label {
+          display: none;
+        }
         .tol-btn {
-          margin-left: 0;
           flex: 1 1 0;
           min-width: 0;
-          padding: 7px 1px;
-          font-size: 10.5px;
+          padding: 8px 0;
+          /* eight chips share the width, so the label scales with the screen
+             rather than spilling out of its button on narrow phones */
+          font-size: clamp(9px, 2.55vw, 12px);
           line-height: 1;
           text-align: center;
           white-space: nowrap;
+          border-radius: 6px;
+        }
+        /* eight steps only fit across a phone without the inch mark */
+        .tol-btn .mk {
+          display: none;
         }
 
-        .error {
+        .msg-bar {
           margin: 0 0 8px;
+          min-height: 18px;
+        }
+
+        .hints {
+          display: none;
         }
 
         /* collapse the wide table into stacked cards */
         thead {
           display: none;
+        }
+        .history {
+          border: none;
+          border-radius: 0;
+          background: transparent;
+          box-shadow: none;
+          overflow: visible;
         }
         #tbl,
         #tbl tbody {
@@ -232,19 +514,18 @@
         #tbl tbody tr {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          border: 1px solid var(--border);
+          border: 1px solid var(--ui-2);
+          border-radius: var(--radius);
           margin-bottom: 8px;
           background: var(--bg);
-        }
-        /* drop the desktop zebra striping in card mode */
-        #tbl tbody tr:nth-child(even) {
-          background: var(--bg);
+          box-shadow: var(--shadow-1);
+          overflow: hidden;
         }
 
         #tbl tbody td {
           display: block;
           border: none;
-          border-top: 1px solid var(--table-border);
+          border-top: 1px solid var(--ui);
           padding: 8px 10px;
           min-width: 0;
           overflow-wrap: anywhere;
@@ -254,12 +535,21 @@
         .input-cell {
           grid-column: 1 / -1;
           border-top: none !important;
+          border-right: none !important;
         }
-        .input-copy {
-          padding-right: 40px;
+        /* must out-specify #tbl tbody td, or the always-visible delete
+           button sits on top of the expression */
+        #tbl tbody td.input-copy {
+          padding-left: 34px;
         }
 
         /* label + value stacked for each output */
+        .calc-value {
+          text-align: left;
+          font-size: 15px;
+          min-height: 2.6em;
+          white-space: normal;
+        }
         .calc-value::before {
           content: attr(data-label);
           display: block;
@@ -269,13 +559,9 @@
           color: var(--tx-2);
           margin-bottom: 3px;
         }
-        .calc-value {
-          font-size: 15px;
-          min-height: 2.6em;
-        }
         /* divider between the two output columns */
         .calc-value:nth-child(even) {
-          border-right: 1px solid var(--table-border);
+          border-right: 1px solid var(--ui);
         }
 
         /* live input row = pinned "active" panel */
@@ -283,15 +569,31 @@
           position: sticky;
           top: 0;
           z-index: 5;
-          border: 2px solid var(--bl);
-          box-shadow: 0 2px 10px rgba(16, 15, 15, 0.1);
+          border-color: var(--ui-3);
+          box-shadow: var(--shadow-2);
         }
         #liveInputCell {
-          box-shadow: none;
+          padding: 8px 8px 6px;
+        }
+        .display {
+          background: var(--bg);
         }
         #box {
-          font-size: 18px;
-          padding: 4px 2px;
+          /* >=16px keeps iOS from zooming the viewport on focus */
+          font-size: 17px;
+          padding: 8px 10px;
+        }
+
+        #emptyRow,
+        #emptyRow:hover {
+          border: none;
+          background: transparent;
+          box-shadow: none;
+          display: block;
+        }
+        #emptyRow td {
+          border: none;
+          padding: 10px;
         }
 
         /* delete control is always reachable on touch */
@@ -307,9 +609,10 @@
           left: 0;
           right: 0;
           bottom: 0;
-          background: var(--ui);
+          background: color-mix(in srgb, var(--ui) 92%, var(--bg));
           border-top: 1px solid var(--ui-3);
-          padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px));
+          padding: 8px 6px calc(8px + env(safe-area-inset-bottom, 0px));
+          box-shadow: 0 -6px 20px rgba(16, 15, 15, 0.08);
           z-index: 20;
         }
         .keys {
@@ -320,22 +623,27 @@
           margin: 0 auto;
         }
         .key {
-          font-family: monospace;
+          font-family: inherit;
           font-size: 20px;
           line-height: 1;
           padding: 14px 0;
           border: 1px solid var(--ui-3);
           background: var(--bg);
           color: var(--tx);
-          border-radius: 7px;
+          border-radius: 8px;
           cursor: pointer;
           user-select: none;
           -webkit-user-select: none;
           -webkit-tap-highlight-color: transparent;
           touch-action: manipulation;
+          box-shadow: 0 1px 0 var(--ui-3), var(--shadow-1);
+          transition: transform 0.06s ease, box-shadow 0.06s ease,
+            background-color 0.06s ease;
         }
         .key:active {
-          background: var(--ui-2);
+          transform: translateY(1px);
+          box-shadow: none;
+          background: color-mix(in srgb, var(--bg) 82%, var(--press));
         }
         .key.mark {
           color: var(--cy);
@@ -353,12 +661,16 @@
           background: var(--re);
           color: var(--bg);
           border-color: var(--re);
+          box-shadow: 0 1px 0 color-mix(in srgb, var(--re) 70%, black),
+            var(--shadow-1);
         }
         .key.space {
           grid-column: span 2;
           background: var(--tx-2);
           color: var(--bg);
           border-color: var(--tx-2);
+          box-shadow: 0 1px 0 color-mix(in srgb, var(--tx-2) 70%, black),
+            var(--shadow-1);
         }
         .key.equals {
           grid-column: span 2;
@@ -366,6 +678,8 @@
           color: var(--bg);
           border-color: var(--bl);
           font-weight: bold;
+          box-shadow: 0 1px 0 color-mix(in srgb, var(--bl) 70%, black),
+            var(--shadow-1);
         }
         .key.back:active {
           background: color-mix(in srgb, var(--re) 82%, black);
@@ -376,6 +690,9 @@
         .key.equals:active {
           background: color-mix(in srgb, var(--bl) 82%, black);
         }
+        .key.clearing {
+          background: color-mix(in srgb, var(--re) 70%, black);
+        }
       }
 
       /* keypad never intercepts input on devices with a real pointer */
@@ -384,21 +701,35 @@
           display: none !important;
         }
       }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation-duration: 0.001ms !important;
+          transition-duration: 0.001ms !important;
+        }
+      }
     </style>
   </head>
   <body>
-    <h1>Feet and Inches Calculator</h1>
-    <div class="tol-bar" role="group" aria-label="Rounding precision">
-      <button class="tol-btn" data-den="2" aria-pressed="false">1/2&#8243;</button>
-      <button class="tol-btn" data-den="4" aria-pressed="false">1/4&#8243;</button>
-      <button class="tol-btn" data-den="8" aria-pressed="false">1/8&#8243;</button>
-      <button class="tol-btn active" data-den="16" aria-pressed="true">1/16&#8243;</button>
-      <button class="tol-btn" data-den="32" aria-pressed="false">1/32&#8243;</button>
-      <button class="tol-btn" data-den="64" aria-pressed="false">1/64&#8243;</button>
-      <button class="tol-btn" data-den="128" aria-pressed="false">1/128&#8243;</button>
-      <button class="tol-btn" data-den="256" aria-pressed="false">1/256&#8243;</button>
+    <div class="app-bar">
+      <h1>Feet &amp; Inches Calculator</h1>
+      <span class="sub">architectural arithmetic</span>
     </div>
-    <div class="error" id="err" aria-live="assertive"></div>
+    <div class="tol-bar" role="group" aria-label="Rounding precision">
+      <span class="label">Round to</span>
+      <button class="tol-btn" data-den="2" aria-pressed="false" aria-label="half inch">1/2<span class="mk">&#8243;</span></button>
+      <button class="tol-btn" data-den="4" aria-pressed="false" aria-label="quarter inch">1/4<span class="mk">&#8243;</span></button>
+      <button class="tol-btn" data-den="8" aria-pressed="false" aria-label="eighth inch">1/8<span class="mk">&#8243;</span></button>
+      <button class="tol-btn active" data-den="16" aria-pressed="true" aria-label="sixteenth inch">1/16<span class="mk">&#8243;</span></button>
+      <button class="tol-btn" data-den="32" aria-pressed="false" aria-label="thirty-second inch">1/32<span class="mk">&#8243;</span></button>
+      <button class="tol-btn" data-den="64" aria-pressed="false" aria-label="sixty-fourth inch">1/64<span class="mk">&#8243;</span></button>
+      <button class="tol-btn" data-den="128" aria-pressed="false" aria-label="one hundred twenty-eighth inch">1/128<span class="mk">&#8243;</span></button>
+      <button class="tol-btn" data-den="256" aria-pressed="false" aria-label="two hundred fifty-sixth inch">1/256<span class="mk">&#8243;</span></button>
+    </div>
+    <div class="msg-bar">
+      <div class="error" id="err" role="alert" aria-live="assertive"></div>
+      <div class="status" id="status" aria-live="polite"></div>
+    </div>
     <div class="history">
       <table id="tbl">
         <thead>
@@ -415,27 +746,41 @@
           </tr>
         </thead>
         <tbody>
-          <tr id="liveRow" class="placeholder">
+          <tr id="liveRow">
             <td id="liveInputCell" class="input-cell" colspan="4">
-              <input
-                id="box"
-                placeholder="5&#8217; + 3 1/4&#8243; or (1.5&#8217; * 2)"
-                autocomplete="off"
-                title="Double-click to copy"
-              />
+              <span class="display" id="display">
+                <input
+                  id="box"
+                  placeholder="5&#8217; + 3 1/4&#8243; or (1.5&#8217; * 2)"
+                  autocomplete="off"
+                  autocorrect="off"
+                  autocapitalize="off"
+                  spellcheck="false"
+                  aria-label="Expression"
+                  title="Double-click to copy"
+                />
+              </span>
             </td>
             <td id="fFt" class="calc-value" data-label="Ft-In (frac)" title="Click to copy"></td>
             <td id="dFt" class="calc-value" data-label="Feet (dec)" title="Click to copy"></td>
             <td id="fIn" class="calc-value" data-label="Inches (frac)" title="Click to copy"></td>
             <td id="dIn" class="calc-value" data-label="Inches (dec)" title="Click to copy"></td>
           </tr>
+          <tr id="emptyRow">
+            <td colspan="8">Press <b>=</b> or Enter to keep a line here.</td>
+          </tr>
         </tbody>
       </table>
     </div>
+    <p class="hints">
+      <kbd>Enter</kbd> save &middot; <kbd>Esc</kbd> clear &middot;
+      <kbd>Alt</kbd>+<kbd>&larr;</kbd><kbd>&rarr;</kbd> precision &middot; click a
+      value to copy
+    </p>
     <template id="row-tpl">
       <tr data-inches="">
         <td class="input-cell input-copy" colspan="4" title="Click to copy">
-          <button class="del" aria-label="Delete row">X</button><span class="expr"></span>
+          <button class="del" aria-label="Delete row">&times;</button><span class="expr"></span>
         </td>
         <td class="fFeet calc-value" data-label="Ft-In (frac)" title="Click to copy"></td>
         <td class="dFt calc-value" data-label="Feet (dec)" title="Click to copy"></td>
@@ -445,7 +790,7 @@
     </template>
     <div class="keypad" id="keypad" aria-label="Calculator keypad">
       <div class="keys">
-        <button class="key back" data-k="back" aria-label="backspace">&#9003;</button>
+        <button class="key back" data-k="back" aria-label="backspace, hold to clear">&#9003;</button>
         <button class="key mark" data-k="&quot;" aria-label="inch mark">&Prime;</button>
         <button class="key mark" data-k="'" aria-label="feet mark">&prime;</button>
         <button class="key op" data-k="(">(</button>
@@ -482,14 +827,84 @@
 
       const tolBtns = [...document.querySelectorAll(".tol-btn")];
       const box = document.getElementById("box");
+      const display = document.getElementById("display");
       const err = document.getElementById("err");
+      const statusEl = document.getElementById("status");
       const historyBody = document.querySelector("#tbl tbody");
       const liveRow = document.getElementById("liveRow");
+      const emptyRow = document.getElementById("emptyRow");
       const fFtEl = document.getElementById("fFt");
       const dFtEl = document.getElementById("dFt");
       const fInEl = document.getElementById("fIn");
       const dInEl = document.getElementById("dIn");
       const rows = [];
+
+      /* ---------- messages ---------- */
+      let statusTimer;
+      function setError(msg) {
+        err.textContent = msg;
+      }
+      function setStatus(msg) {
+        statusEl.textContent = msg;
+        clearTimeout(statusTimer);
+        statusTimer = setTimeout(() => (statusEl.textContent = ""), 1800);
+      }
+
+      /* ---------- caret tracking ----------
+         An <input> only auto-scrolls to its caret for *native* edits, and
+         reassigning .value resets scrollLeft to 0. Since the on-screen keypad
+         drives every edit on touch, the readout would otherwise stay parked at
+         the start of a long expression while the caret ran off the right edge.
+         So measure the text ahead of the caret ourselves and scroll to it. */
+      const measureCtx = document.createElement("canvas").getContext("2d");
+      let measuredFont = "";
+
+      function textWidth(str) {
+        const cs = getComputedStyle(box);
+        const font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize}/${cs.lineHeight} ${cs.fontFamily}`;
+        if (font !== measuredFont) {
+          measureCtx.font = font;
+          measuredFont = font;
+        }
+        return measureCtx.measureText(str).width;
+      }
+
+      // Fade the edge the text runs off, so it's obvious there's more of it.
+      function updateFades() {
+        const max = box.scrollWidth - box.clientWidth;
+        display.classList.toggle("fade-l", box.scrollLeft > 1);
+        display.classList.toggle("fade-r", max > 1 && box.scrollLeft < max - 1);
+      }
+
+      function scrollCaretIntoView() {
+        const cs = getComputedStyle(box);
+        const view =
+          box.clientWidth -
+          (parseFloat(cs.paddingLeft) || 0) -
+          (parseFloat(cs.paddingRight) || 0);
+        if (view <= 0) return;
+
+        const caret = box.selectionEnd ?? box.value.length;
+        const caretX = textWidth(box.value.slice(0, caret));
+        // keep a little context visible on the side the caret is heading for
+        const margin = Math.min(28, view / 4);
+        const max = Math.max(0, box.scrollWidth - box.clientWidth);
+
+        let left = box.scrollLeft;
+        if (caretX - left > view - margin) left = caretX - view + margin;
+        else if (caretX - left < margin) left = caretX - margin;
+
+        box.scrollLeft = Math.max(0, Math.min(left, max));
+        updateFades();
+      }
+
+      // Selection changes land after the event that caused them, so re-check
+      // on the next frame too (arrow keys, pointer drags, focus restores).
+      function trackCaret() {
+        scrollCaretIntoView();
+        requestAnimationFrame(scrollCaretIntoView);
+      }
+
       function clearLiveOutputs() {
         [fFtEl, dFtEl, fInEl, dInEl].forEach((el) => {
           el.textContent = "";
@@ -497,14 +912,11 @@
       }
 
       function refreshLive() {
-        err.textContent = "";
         const expr = box.value.trim();
         if (!expr) {
           clearLiveOutputs();
-          liveRow.classList.add("placeholder");
           return;
         }
-        liveRow.classList.remove("placeholder");
         try {
           const out = formatOutputs(parseInput(expr), DEN);
           fFtEl.textContent = out.fFt;
@@ -514,6 +926,14 @@
         } catch (e) {
           clearLiveOutputs();
         }
+      }
+
+      // Everything that edits the box funnels through here: recompute, then
+      // put the caret back in view.
+      function afterEdit() {
+        setError("");
+        refreshLive();
+        trackCaret();
       }
 
       async function copyText(text) {
@@ -533,6 +953,16 @@
         document.body.removeChild(ta);
       }
 
+      function flashCopied(el) {
+        if (!(el instanceof HTMLElement) || el === box) return;
+        el.classList.remove("copied");
+        void el.offsetWidth; // restart the animation
+        el.classList.add("copied");
+        el.addEventListener("animationend", () => el.classList.remove("copied"), {
+          once: true,
+        });
+      }
+
       async function copyCalculatedValue(target) {
         const value =
           target instanceof HTMLInputElement
@@ -543,16 +973,20 @@
         if (!value) return;
         try {
           await copyText(value);
-          err.textContent = `Copied: ${value}`;
+          setStatus(`Copied ${value}`);
+          flashCopied(target);
         } catch {
-          err.textContent = "Could not copy to clipboard.";
+          setError("Could not copy to clipboard.");
         }
       }
 
-      box.addEventListener("input", () => {
-        err.textContent = "";
-        refreshLive();
-      });
+      box.addEventListener("input", afterEdit);
+      box.addEventListener("focus", trackCaret);
+      box.addEventListener("scroll", updateFades);
+      // caret moves that don't change the text (arrows, Home/End, clicks)
+      ["keyup", "click", "select", "pointerup"].forEach((evt) =>
+        box.addEventListener(evt, trackCaret)
+      );
 
       box.addEventListener("dblclick", () => {
         copyCalculatedValue(box);
@@ -561,23 +995,28 @@
       function commitInput() {
         const expr = box.value.trim();
         if (!expr) {
-          err.textContent = "Input cannot be empty.";
+          setError("Input cannot be empty.");
           return;
         }
         try {
           const tot = parseInput(expr);
           addRow(expr, tot);
           box.value = "";
-          err.textContent = "";
+          setError("");
           refreshLive();
+          trackCaret();
         } catch (ex) {
-          err.textContent = ex.message || ex;
+          setError(ex.message || ex);
         }
       }
 
       box.addEventListener("keydown", (e) => {
-        if (e.key !== "Enter") return;
-        commitInput();
+        if (e.key === "Enter") return commitInput();
+        if (e.key === "Escape" && box.value) {
+          e.preventDefault();
+          box.value = "";
+          afterEdit();
+        }
       });
 
       document.addEventListener("click", (e) => {
@@ -593,6 +1032,13 @@
         }
       });
 
+      // Pulled out of the DOM rather than hidden, so the "last row" border
+      // rules keep landing on the row people can actually see.
+      function syncEmptyState() {
+        if (rows.length && emptyRow.isConnected) emptyRow.remove();
+        else if (!rows.length && !emptyRow.isConnected) historyBody.append(emptyRow);
+      }
+
       function addRow(expr, tot) {
         const out = formatOutputs(tot, DEN);
         const tpl = document.getElementById("row-tpl").content.cloneNode(true);
@@ -606,9 +1052,15 @@
         tr.querySelector(".del").addEventListener("click", () => {
           historyBody.removeChild(tr);
           rows.splice(rows.indexOf(tr), 1);
+          syncEmptyState();
+        });
+        tr.classList.add("row-in");
+        tr.addEventListener("animationend", () => tr.classList.remove("row-in"), {
+          once: true,
         });
         historyBody.insertBefore(tr, liveRow.nextSibling);
         rows.push(tr);
+        syncEmptyState();
       }
 
       function refreshHistory() {
@@ -635,16 +1087,20 @@
 
       /* ---------- on-screen keypad (touch / small screens) ---------- */
       const keypad = document.getElementById("keypad");
+      const buzz = (ms) => navigator.vibrate?.(ms);
 
       function insertAtCursor(text) {
         box.focus();
         const start = box.selectionStart ?? box.value.length;
         const end = box.selectionEnd ?? box.value.length;
-        box.value = box.value.slice(0, start) + text + box.value.slice(end);
-        const pos = start + text.length;
-        box.setSelectionRange(pos, pos);
-        err.textContent = "";
-        refreshLive();
+        if (box.setRangeText) {
+          box.setRangeText(text, start, end, "end");
+        } else {
+          box.value = box.value.slice(0, start) + text + box.value.slice(end);
+          const pos = start + text.length;
+          box.setSelectionRange(pos, pos);
+        }
+        afterEdit();
       }
 
       function backspace() {
@@ -657,8 +1113,13 @@
         }
         box.value = box.value.slice(0, start) + box.value.slice(end);
         box.setSelectionRange(start, start);
-        err.textContent = "";
-        refreshLive();
+        afterEdit();
+      }
+
+      function clearAll() {
+        box.focus();
+        box.value = "";
+        afterEdit();
       }
 
       // Keep the caret in the input when tapping keys (prevents blur/flicker).
@@ -666,10 +1127,40 @@
         if (e.target.closest(".key")) e.preventDefault();
       });
 
+      // Hold backspace to wipe the line — the usual calculator "clear".
+      let holdTimer;
+      let didHoldClear = false;
+      const backKey = keypad.querySelector(".key.back");
+
+      backKey.addEventListener("pointerdown", () => {
+        didHoldClear = false;
+        clearTimeout(holdTimer);
+        holdTimer = setTimeout(() => {
+          didHoldClear = true;
+          backKey.classList.add("clearing");
+          buzz(15);
+          clearAll();
+        }, 500);
+      });
+
+      ["pointerup", "pointercancel", "pointerleave"].forEach((evt) =>
+        backKey.addEventListener(evt, () => {
+          clearTimeout(holdTimer);
+          backKey.classList.remove("clearing");
+        })
+      );
+
       keypad.addEventListener("click", (e) => {
         const key = e.target.closest(".key");
         if (!key) return;
-        if (key.classList.contains("back")) return backspace();
+        buzz(8);
+        if (key.classList.contains("back")) {
+          if (didHoldClear) {
+            didHoldClear = false;
+            return;
+          }
+          return backspace();
+        }
         if (key.classList.contains("equals")) return commitInput();
         insertAtCursor(key.dataset.k);
       });
@@ -685,6 +1176,7 @@
           box.removeAttribute("inputmode");
           document.body.style.paddingBottom = "";
         }
+        trackCaret();
       }
       touchMode.addEventListener("change", syncTouchMode);
       window.addEventListener("resize", syncTouchMode);
@@ -692,16 +1184,18 @@
 
       tolBtns.forEach((b, i) => b.addEventListener("click", () => setDen(i)));
       document.addEventListener("keydown", (e) => {
-        if (
-          (e.key === "ArrowLeft" || e.key === "ArrowRight") &&
-          document.activeElement !== box
-        ) {
-          const dir = e.key === "ArrowLeft" ? -1 : 1;
-          setDen((active + dir + dens.length) % dens.length);
-        }
+        if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+        // Alt+arrows always step precision; bare arrows only when the caret
+        // isn't in the box (where they belong to text navigation).
+        if (!e.altKey && document.activeElement === box) return;
+        if (e.altKey) e.preventDefault();
+        const dir = e.key === "ArrowLeft" ? -1 : 1;
+        setDen((active + dir + dens.length) % dens.length);
       });
 
+      syncEmptyState();
       refreshLive();
+      box.focus({ preventScroll: true });
     </script>
   </body>
 </html>
