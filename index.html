@@ -488,9 +488,14 @@
           display: none;
         }
 
+        /* no reserved space until there's actually something to say — the
+           readout sits right under the title instead */
         .msg-bar {
-          margin: 0 0 8px;
-          min-height: 18px;
+          margin: 0;
+          min-height: 0;
+        }
+        .msg-bar.has-msg {
+          margin-bottom: 8px;
         }
 
         .hints {
@@ -897,13 +902,25 @@
 
       /* ---------- messages ---------- */
       let statusTimer;
+      const msgBar = document.querySelector(".msg-bar");
+      function syncMsgBar() {
+        msgBar.classList.toggle(
+          "has-msg",
+          !!(err.textContent || statusEl.textContent)
+        );
+      }
       function setError(msg) {
         err.textContent = msg;
+        syncMsgBar();
       }
       function setStatus(msg) {
         statusEl.textContent = msg;
+        syncMsgBar();
         clearTimeout(statusTimer);
-        statusTimer = setTimeout(() => (statusEl.textContent = ""), 1800);
+        statusTimer = setTimeout(() => {
+          statusEl.textContent = "";
+          syncMsgBar();
+        }, 1800);
       }
 
       /* ---------- caret tracking ----------
