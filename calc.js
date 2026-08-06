@@ -84,14 +84,26 @@ export function evaluate(expr) {
   return Function(`"use strict";return (${expr})`)();
 }
 
+// Past 2^53 a double can no longer hold an exact integer, so the arithmetic
+// has already gone wrong by the time we'd format it — and the number would
+// print as scientific notation on top of that. Refuse it instead.
+export const MAX_INCHES = Number.MAX_SAFE_INTEGER;
+
 // Parse a full expression and return the total length in inches.
 export function parseInput(s) {
   const val = evaluate(pre(s));
   if (typeof val !== "number" || !Number.isFinite(val)) {
     throw new SyntaxError("Invalid result");
   }
+  if (Math.abs(val) > MAX_INCHES) {
+    throw new RangeError("Result is too large to measure.");
+  }
   return val;
 }
+
+// Thousands separators, so long runs of digits stay readable. Safe to feed
+// straight back into the parser — normalize() strips commas.
+const group = (digits) => digits.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
 const mixed = (val, d) => {
   const sign = val < 0 ? "-" : "";
@@ -99,13 +111,13 @@ const mixed = (val, d) => {
   abs = roundNearest(abs, d);
   const whole = Math.floor(abs);
   const frac = abs - whole;
-  if (frac === 0) return sign + whole;
+  if (frac === 0) return sign + group(String(whole));
   let num = Math.round(frac * d);
   let den = d;
   const g = gcd(num, den);
   num /= g;
   den /= g;
-  return sign + (whole ? whole + " " : "") + num + "/" + den;
+  return sign + (whole ? group(String(whole)) + " " : "") + num + "/" + den;
 };
 
 const in2ft = (inches) => ({
@@ -113,7 +125,10 @@ const in2ft = (inches) => ({
   in: inches % 12,
 });
 
-const trimZeros = (n) => n.toFixed(5).replace(/\.0+$|(?<=\d)0+$/, "");
+const trimZeros = (n) => {
+  const [whole, frac] = n.toFixed(5).replace(/\.0+$|(?<=\d)0+$/, "").split(".");
+  return frac ? `${group(whole)}.${frac}` : group(whole);
+};
 
 // Format a total (in inches) into the four presentation strings.
 export function formatOutputs(tot, DEN) {

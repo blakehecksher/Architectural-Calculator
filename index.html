@@ -6,13 +6,16 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
-    <meta name="color-scheme" content="light dark" />
-    <meta name="theme-color" content="#fffcf0" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#100f0f" media="(prefers-color-scheme: dark)" />
+    <!-- Light only, on purpose: pinning the scheme stops a phone in dark mode
+         from re-tinting the page or the form controls. -->
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#fffcf0" />
     <title>Feet &amp; Inches Calculator</title>
     <style>
       :root {
-        /* ---------- Flexoki, light ---------- */
+        color-scheme: light;
+
+        /* ---------- Flexoki ---------- */
         --bg: #fffcf0; /* paper */
         --bg-2: #f2f0e5; /* base-50 */
         --ui: #e6e4d9; /* base-100 */
@@ -42,34 +45,6 @@
         --radius: 10px;
       }
 
-      /* Flexoki's dark set — same hues, inverted ramp. */
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --bg: #100f0f;
-          --bg-2: #1c1b1a; /* base-950 */
-          --ui: #282726; /* base-900 */
-          --ui-2: #343331; /* base-850 */
-          --ui-3: #403e3c; /* base-800 */
-          --tx: #fffcf0;
-          --tx-2: #878580; /* base-500 */
-          --tx-3: #b7b5ac; /* base-300 */
-
-          --re: #d14d41;
-          --or: #da702c;
-          --ye: #d0a215;
-          --gr: #879a39;
-          --cy: #3aa99f;
-          --bl: #4385be;
-          --pu: #8b7ec8;
-          --ma: #ce5d97;
-
-          --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
-          --shadow-2: 0 1px 2px rgba(0, 0, 0, 0.35),
-            0 8px 24px rgba(0, 0, 0, 0.45);
-          --press: rgba(255, 252, 240, 0.14);
-        }
-      }
-
       * {
         box-sizing: border-box;
       }
@@ -77,7 +52,7 @@
       body {
         font-family: var(--mono);
         font-variant-numeric: tabular-nums;
-        font-size: 14px;
+        font-size: 15px;
         max-width: 1000px;
         margin: 0 auto;
         padding: 24px 20px 40px;
@@ -101,13 +76,6 @@
         margin: 0;
       }
 
-      .app-bar .sub {
-        font-size: 11px;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        color: var(--tx-2);
-      }
-
       /* ---------- precision selector ---------- */
       .tol-bar {
         display: flex;
@@ -122,7 +90,7 @@
         font-size: 11px;
         letter-spacing: 0.06em;
         text-transform: uppercase;
-        color: var(--tx-2);
+        color: var(--tx-3);
       }
 
       .tol-btn {
@@ -130,11 +98,11 @@
         border: 1px solid var(--ui-2);
         border-radius: 7px;
         background: var(--bg-2);
-        color: var(--tx-2);
+        color: var(--tx-3);
         cursor: pointer;
         user-select: none;
         font-family: inherit;
-        font-size: 12px;
+        font-size: 12.5px;
         line-height: 18px;
         transition: background-color 0.12s ease, color 0.12s ease,
           border-color 0.12s ease;
@@ -200,9 +168,9 @@
 
       th {
         background: var(--bg-2);
-        color: var(--tx-2);
-        font-size: 10.5px;
-        font-weight: 500;
+        color: var(--tx-3);
+        font-size: 11px;
+        font-weight: 600;
         letter-spacing: 0.08em;
         text-transform: uppercase;
         text-align: center;
@@ -305,7 +273,7 @@
         border: none;
         background: transparent;
         font: inherit;
-        font-size: 15px;
+        font-size: 16px;
         padding: 7px 10px;
         color: var(--tx);
         outline: none;
@@ -319,7 +287,7 @@
 
       /* ---------- saved rows ---------- */
       .input-copy {
-        padding-left: 30px;
+        padding-right: 34px;
         overflow-wrap: anywhere;
       }
 
@@ -376,7 +344,7 @@
         opacity: 0;
         pointer-events: none;
         position: absolute;
-        left: 8px;
+        right: 10px;
         top: 50%;
         transform: translateY(-50%);
         width: 18px;
@@ -410,18 +378,10 @@
       }
 
       /* ---------- empty state + hints ---------- */
-      #emptyRow td {
-        text-align: center;
-        color: var(--tx-2);
-        font-size: 12px;
-        padding: 14px 10px;
-        border-right: none;
-      }
-
       .hints {
         margin: 10px 2px 0;
-        font-size: 11.5px;
-        color: var(--tx-2);
+        font-size: 12px;
+        color: var(--tx-3);
         text-align: right;
       }
 
@@ -454,10 +414,6 @@
 
         h1 {
           font-size: 1rem;
-        }
-
-        .app-bar .sub {
-          display: none;
         }
 
         /* precision selector fits all steps across one row */
@@ -540,7 +496,7 @@
         /* must out-specify #tbl tbody td, or the always-visible delete
            button sits on top of the expression */
         #tbl tbody td.input-copy {
-          padding-left: 34px;
+          padding-right: 38px;
         }
 
         /* label + value stacked for each output */
@@ -550,13 +506,18 @@
           min-height: 2.6em;
           white-space: normal;
         }
+        /* the live result is the answer you're looking at — give it size */
+        #liveRow .calc-value {
+          font-size: 18px;
+          font-weight: 600;
+        }
         .calc-value::before {
           content: attr(data-label);
           display: block;
           font-size: 10px;
           letter-spacing: 0.04em;
           text-transform: uppercase;
-          color: var(--tx-2);
+          color: var(--tx-3);
           margin-bottom: 3px;
         }
         /* divider between the two output columns */
@@ -580,20 +541,8 @@
         }
         #box {
           /* >=16px keeps iOS from zooming the viewport on focus */
-          font-size: 17px;
-          padding: 8px 10px;
-        }
-
-        #emptyRow,
-        #emptyRow:hover {
-          border: none;
-          background: transparent;
-          box-shadow: none;
-          display: block;
-        }
-        #emptyRow td {
-          border: none;
-          padding: 10px;
+          font-size: 20px;
+          padding: 10px 10px;
         }
 
         /* delete control is always reachable on touch */
@@ -609,7 +558,7 @@
           left: 0;
           right: 0;
           bottom: 0;
-          background: color-mix(in srgb, var(--ui) 92%, var(--bg));
+          background: color-mix(in srgb, var(--ui-2) 88%, var(--bg));
           border-top: 1px solid var(--ui-3);
           padding: 8px 6px calc(8px + env(safe-area-inset-bottom, 0px));
           box-shadow: 0 -6px 20px rgba(16, 15, 15, 0.08);
@@ -624,13 +573,14 @@
         }
         .key {
           font-family: inherit;
-          font-size: 20px;
+          font-size: 23px;
+          font-weight: 600;
           line-height: 1;
-          padding: 14px 0;
+          padding: 15px 0;
           border: 1px solid var(--ui-3);
           background: var(--bg);
           color: var(--tx);
-          border-radius: 8px;
+          border-radius: 9px;
           cursor: pointer;
           user-select: none;
           -webkit-user-select: none;
@@ -645,50 +595,80 @@
           box-shadow: none;
           background: color-mix(in srgb, var(--bg) 82%, var(--press));
         }
+
+        /* Colour carries meaning, one hue per job: cyan = unit marks,
+           orange = arithmetic, blue = commit, red = clear. Digits stay paper
+           so they read as the mass of the pad. */
+        /* the prime marks draw small for their point size — size them up so
+           they read as clearly as the digits */
         .key.mark {
-          color: var(--cy);
-          font-weight: bold;
+          font-size: 27px;
+          background: var(--cy);
+          border-color: var(--cy);
+          color: var(--bg);
+          box-shadow: 0 1px 0 color-mix(in srgb, var(--cy) 68%, black),
+            var(--shadow-1);
         }
         .key.op {
+          background: var(--or);
+          border-color: var(--or);
+          color: var(--bg);
+          box-shadow: 0 1px 0 color-mix(in srgb, var(--or) 68%, black),
+            var(--shadow-1);
+        }
+        /* parens are structural, not arithmetic — related but subordinate */
+        .key[data-k="("],
+        .key[data-k=")"] {
+          background: var(--bg);
+          border-color: var(--ui-3);
           color: var(--or);
+          box-shadow: 0 1px 0 var(--ui-3), var(--shadow-1);
         }
         .key[data-k="0"] {
           grid-column: span 2;
         }
-        /* full-color utility keys */
         .key.back {
           grid-column: span 1;
           background: var(--re);
-          color: var(--bg);
           border-color: var(--re);
-          box-shadow: 0 1px 0 color-mix(in srgb, var(--re) 70%, black),
+          color: var(--bg);
+          box-shadow: 0 1px 0 color-mix(in srgb, var(--re) 68%, black),
             var(--shadow-1);
         }
         .key.space {
           grid-column: span 2;
-          background: var(--tx-2);
-          color: var(--bg);
-          border-color: var(--tx-2);
-          box-shadow: 0 1px 0 color-mix(in srgb, var(--tx-2) 70%, black),
-            var(--shadow-1);
+          font-size: 27px;
+          background: var(--ui);
+          border-color: var(--ui-3);
+          color: var(--tx-3);
         }
         .key.equals {
           grid-column: span 2;
           background: var(--bl);
-          color: var(--bg);
           border-color: var(--bl);
-          font-weight: bold;
-          box-shadow: 0 1px 0 color-mix(in srgb, var(--bl) 70%, black),
+          color: var(--bg);
+          box-shadow: 0 1px 0 color-mix(in srgb, var(--bl) 68%, black),
             var(--shadow-1);
         }
+
+        .key.mark:active {
+          background: color-mix(in srgb, var(--cy) 84%, black);
+        }
+        .key.op:active {
+          background: color-mix(in srgb, var(--or) 84%, black);
+        }
+        .key[data-k="("]:active,
+        .key[data-k=")"]:active {
+          background: color-mix(in srgb, var(--bg) 82%, var(--press));
+        }
         .key.back:active {
-          background: color-mix(in srgb, var(--re) 82%, black);
+          background: color-mix(in srgb, var(--re) 84%, black);
         }
         .key.space:active {
-          background: color-mix(in srgb, var(--tx-2) 82%, black);
+          background: var(--ui-2);
         }
         .key.equals:active {
-          background: color-mix(in srgb, var(--bl) 82%, black);
+          background: color-mix(in srgb, var(--bl) 84%, black);
         }
         .key.clearing {
           background: color-mix(in srgb, var(--re) 70%, black);
@@ -713,7 +693,6 @@
   <body>
     <div class="app-bar">
       <h1>Feet &amp; Inches Calculator</h1>
-      <span class="sub">architectural arithmetic</span>
     </div>
     <div class="tol-bar" role="group" aria-label="Rounding precision">
       <span class="label">Round to</span>
@@ -766,16 +745,12 @@
             <td id="fIn" class="calc-value" data-label="Inches (frac)" title="Click to copy"></td>
             <td id="dIn" class="calc-value" data-label="Inches (dec)" title="Click to copy"></td>
           </tr>
-          <tr id="emptyRow">
-            <td colspan="8">Press <b>=</b> or Enter to keep a line here.</td>
-          </tr>
         </tbody>
       </table>
     </div>
     <p class="hints">
-      <kbd>Enter</kbd> save &middot; <kbd>Esc</kbd> clear &middot;
-      <kbd>Alt</kbd>+<kbd>&larr;</kbd><kbd>&rarr;</kbd> precision &middot; click a
-      value to copy
+      <kbd>Enter</kbd> adds the line below &middot; <kbd>Esc</kbd> clears
+      &middot; click any value to copy
     </p>
     <template id="row-tpl">
       <tr data-inches="">
@@ -832,7 +807,6 @@
       const statusEl = document.getElementById("status");
       const historyBody = document.querySelector("#tbl tbody");
       const liveRow = document.getElementById("liveRow");
-      const emptyRow = document.getElementById("emptyRow");
       const fFtEl = document.getElementById("fFt");
       const dFtEl = document.getElementById("dFt");
       const fInEl = document.getElementById("fIn");
@@ -925,6 +899,9 @@
           dInEl.textContent = out.dIn;
         } catch (e) {
           clearLiveOutputs();
+          // A result too big to represent is a real answer we can't show, not
+          // a typo — say so rather than just going blank.
+          if (e instanceof RangeError) setError(e.message);
         }
       }
 
@@ -1032,13 +1009,6 @@
         }
       });
 
-      // Pulled out of the DOM rather than hidden, so the "last row" border
-      // rules keep landing on the row people can actually see.
-      function syncEmptyState() {
-        if (rows.length && emptyRow.isConnected) emptyRow.remove();
-        else if (!rows.length && !emptyRow.isConnected) historyBody.append(emptyRow);
-      }
-
       function addRow(expr, tot) {
         const out = formatOutputs(tot, DEN);
         const tpl = document.getElementById("row-tpl").content.cloneNode(true);
@@ -1052,7 +1022,6 @@
         tr.querySelector(".del").addEventListener("click", () => {
           historyBody.removeChild(tr);
           rows.splice(rows.indexOf(tr), 1);
-          syncEmptyState();
         });
         tr.classList.add("row-in");
         tr.addEventListener("animationend", () => tr.classList.remove("row-in"), {
@@ -1060,7 +1029,6 @@
         });
         historyBody.insertBefore(tr, liveRow.nextSibling);
         rows.push(tr);
-        syncEmptyState();
       }
 
       function refreshHistory() {
@@ -1183,17 +1151,15 @@
       syncTouchMode();
 
       tolBtns.forEach((b, i) => b.addEventListener("click", () => setDen(i)));
+      // Arrows step precision only when the caret isn't in the box — inside it
+      // they belong to the text.
       document.addEventListener("keydown", (e) => {
         if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
-        // Alt+arrows always step precision; bare arrows only when the caret
-        // isn't in the box (where they belong to text navigation).
-        if (!e.altKey && document.activeElement === box) return;
-        if (e.altKey) e.preventDefault();
+        if (document.activeElement === box) return;
         const dir = e.key === "ArrowLeft" ? -1 : 1;
         setDen((active + dir + dens.length) % dens.length);
       });
 
-      syncEmptyState();
       refreshLive();
       box.focus({ preventScroll: true });
     </script>

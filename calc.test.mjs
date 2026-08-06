@@ -141,6 +141,12 @@ bad("*/");
 bad("2''");
 bad("5 + )");
 
+/* Results too big to be represented exactly are refused rather than shown
+   as float noise or scientific notation */
+bad("99999999999*99999999*1000"); // was printing 9.99e+21"
+bad("9999999999*9999999999*99");
+eq("100000'*100000*10000", 1200000000000000); // still inside the safe range
+
 /* ------------------------------------------------------------------ */
 /* Formatting                                                          */
 fmt(33, 16, { fFt: "2'-9\"", dFt: "2.75'", fIn: '33"', dIn: '33"' });
@@ -155,6 +161,15 @@ fmt(11.97, 16, { fFt: "1'-0\"" }); // inch rounds up to 12 → carries to a foot
 fmt(35.99, 16, { fFt: "3'-0\"" });
 fmt(3.3, 8, { fFt: "0'-3 1/4\"" }); // 1/8 precision rounds 0.3 → 1/4
 fmt(3.3, 2, { fFt: "0'-3 1/2\"" }); // 1/2 precision rounds 0.3 → 1/2
+
+/* Thousands separators on long numbers */
+fmt(1200, 16, { fFt: "100'-0\"", dFt: "100'", fIn: '1,200"', dIn: '1,200"' });
+fmt(1200000, 16, { fFt: "100,000'-0\"", dFt: "100,000'", fIn: '1,200,000"', dIn: '1,200,000"' });
+fmt(1234.5, 16, { fIn: '1,234 1/2"', dIn: '1,234.5"' });
+fmt(-1200, 16, { fIn: '-1,200"', dIn: '-1,200"' });
+// grouped output must feed straight back into the parser
+eq('1,234 1/2"', 1234.5);
+eq("100,000'", 1200000);
 
 /* ------------------------------------------------------------------ */
 if (failures.length) {
