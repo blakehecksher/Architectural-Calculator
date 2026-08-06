@@ -76,27 +76,47 @@
         margin: 0;
       }
 
-      /* ---------- precision selector ---------- */
+      /* ---------- precision selector ----------
+         On the web these read as tabs sitting on top of the table: the label
+         sits over the Input column and the chips span the results half, so
+         each pair lines up under Feet / Inches. The table is fixed-layout
+         with 8 equal columns and Input spans 4, so the results group starts
+         at exactly 50% — hence the width below. */
       .tol-bar {
         display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 4px;
-        margin-bottom: 12px;
+        align-items: flex-end;
+        padding: 8px 0 0;
+        /* paper strip so the tabs read as raised off it — the header row
+           below is --bg-2 and would otherwise blend into one beige slab */
+        background: var(--bg);
+        border-bottom: 1px solid var(--ui-2);
       }
 
       .tol-bar .label {
         margin-right: auto;
+        padding: 0 0 9px 10px;
         font-size: 11px;
         letter-spacing: 0.06em;
         text-transform: uppercase;
         color: var(--tx-3);
       }
 
+      .tol-tabs {
+        display: flex;
+        gap: 3px;
+        width: calc(50% - 8px);
+        margin-right: 8px;
+      }
+
       .tol-btn {
-        padding: 5px 9px;
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 6px 2px 7px;
         border: 1px solid var(--ui-2);
-        border-radius: 7px;
+        /* tab shape: top-rounded, and the bottom edge laps over the bar's
+           hairline so the active one connects to the table below */
+        border-radius: 7px 7px 0 0;
+        margin-bottom: -1px;
         background: var(--bg-2);
         color: var(--tx-3);
         cursor: pointer;
@@ -104,12 +124,15 @@
         font-family: inherit;
         font-size: 12.5px;
         line-height: 18px;
+        text-align: center;
+        white-space: nowrap;
         transition: background-color 0.12s ease, color 0.12s ease,
           border-color 0.12s ease;
       }
 
       .tol-btn:hover {
         border-color: var(--ui-3);
+        background: var(--bg);
         color: var(--tx);
       }
 
@@ -394,13 +417,29 @@
         background: var(--bg-2);
       }
 
+      /* Tablets get the web layout, but the tabs are boxed into half a
+         narrower card — scale the label down and drop the inch mark rather
+         than break the alignment with the columns. */
+      @media (min-width: 601px) and (max-width: 900px) {
+        .tol-btn {
+          font-size: clamp(8.5px, 1.6vw, 11.5px);
+          padding: 6px 1px 7px;
+        }
+        .tol-btn .mk {
+          display: none;
+        }
+        .tol-bar .label {
+          font-size: 10px;
+        }
+      }
+
       /* On-screen keypad is hidden on desktop; shown on small screens. */
       .keypad {
         display: none;
       }
 
       /* ---------- Mobile layout ---------- */
-      @media (max-width: 820px) {
+      @media (max-width: 600px) {
         body {
           padding: 12px 12px 0;
           /* space for the fixed keypad; refined in JS to its real height */
@@ -416,25 +455,33 @@
           font-size: 1rem;
         }
 
-        /* precision selector fits all steps across one row */
+        /* JS moves the bar into the keypad here, so the precision steps sit
+           under your thumb instead of at the top of the screen */
         .tol-bar {
-          gap: 2px;
-          margin-bottom: 8px;
+          padding: 0 0 8px;
+          margin: 0 auto 8px;
+          max-width: 520px;
+          background: transparent;
+          border-bottom: 1px solid var(--ui-3);
         }
         .tol-bar .label {
           display: none;
         }
+        .tol-tabs {
+          gap: 3px;
+          width: 100%;
+          margin-right: 0;
+        }
         .tol-btn {
-          flex: 1 1 0;
-          min-width: 0;
-          padding: 8px 0;
+          padding: 9px 0;
+          border-radius: 7px;
+          margin-bottom: 0;
+          background: var(--bg);
+          border-color: var(--ui-3);
           /* eight chips share the width, so the label scales with the screen
              rather than spilling out of its button on narrow phones */
           font-size: clamp(9px, 2.55vw, 12px);
           line-height: 1;
-          text-align: center;
-          white-space: nowrap;
-          border-radius: 6px;
         }
         /* eight steps only fit across a phone without the inch mark */
         .tol-btn .mk {
@@ -675,8 +722,34 @@
         }
       }
 
+      /* Short phones (SE-class): tighten the pad so the readout and history
+         still have room above it. */
+      @media (max-width: 600px) and (max-height: 720px) {
+        .keypad {
+          padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px));
+        }
+        .keys {
+          gap: 5px;
+        }
+        .key {
+          padding: 10px 0;
+          font-size: 20px;
+        }
+        .key.mark,
+        .key.space {
+          font-size: 23px;
+        }
+        .tol-bar {
+          padding-bottom: 6px;
+          margin-bottom: 6px;
+        }
+        .tol-btn {
+          padding: 7px 0;
+        }
+      }
+
       /* keypad never intercepts input on devices with a real pointer */
-      @media (min-width: 821px) {
+      @media (min-width: 601px) {
         .keypad {
           display: none !important;
         }
@@ -694,22 +767,24 @@
     <div class="app-bar">
       <h1>Feet &amp; Inches Calculator</h1>
     </div>
-    <div class="tol-bar" role="group" aria-label="Rounding precision">
-      <span class="label">Round to</span>
-      <button class="tol-btn" data-den="2" aria-pressed="false" aria-label="half inch">1/2<span class="mk">&#8243;</span></button>
-      <button class="tol-btn" data-den="4" aria-pressed="false" aria-label="quarter inch">1/4<span class="mk">&#8243;</span></button>
-      <button class="tol-btn" data-den="8" aria-pressed="false" aria-label="eighth inch">1/8<span class="mk">&#8243;</span></button>
-      <button class="tol-btn active" data-den="16" aria-pressed="true" aria-label="sixteenth inch">1/16<span class="mk">&#8243;</span></button>
-      <button class="tol-btn" data-den="32" aria-pressed="false" aria-label="thirty-second inch">1/32<span class="mk">&#8243;</span></button>
-      <button class="tol-btn" data-den="64" aria-pressed="false" aria-label="sixty-fourth inch">1/64<span class="mk">&#8243;</span></button>
-      <button class="tol-btn" data-den="128" aria-pressed="false" aria-label="one hundred twenty-eighth inch">1/128<span class="mk">&#8243;</span></button>
-      <button class="tol-btn" data-den="256" aria-pressed="false" aria-label="two hundred fifty-sixth inch">1/256<span class="mk">&#8243;</span></button>
-    </div>
     <div class="msg-bar">
       <div class="error" id="err" role="alert" aria-live="assertive"></div>
       <div class="status" id="status" aria-live="polite"></div>
     </div>
     <div class="history">
+      <div class="tol-bar" id="tolBar">
+        <span class="label">Round to</span>
+        <div class="tol-tabs" role="group" aria-label="Rounding precision">
+          <button class="tol-btn" data-den="2" aria-pressed="false" aria-label="half inch">1/2<span class="mk">&#8243;</span></button>
+          <button class="tol-btn" data-den="4" aria-pressed="false" aria-label="quarter inch">1/4<span class="mk">&#8243;</span></button>
+          <button class="tol-btn" data-den="8" aria-pressed="false" aria-label="eighth inch">1/8<span class="mk">&#8243;</span></button>
+          <button class="tol-btn active" data-den="16" aria-pressed="true" aria-label="sixteenth inch">1/16<span class="mk">&#8243;</span></button>
+          <button class="tol-btn" data-den="32" aria-pressed="false" aria-label="thirty-second inch">1/32<span class="mk">&#8243;</span></button>
+          <button class="tol-btn" data-den="64" aria-pressed="false" aria-label="sixty-fourth inch">1/64<span class="mk">&#8243;</span></button>
+          <button class="tol-btn" data-den="128" aria-pressed="false" aria-label="one hundred twenty-eighth inch">1/128<span class="mk">&#8243;</span></button>
+          <button class="tol-btn" data-den="256" aria-pressed="false" aria-label="two hundred fifty-sixth inch">1/256<span class="mk">&#8243;</span></button>
+        </div>
+      </div>
       <table id="tbl">
         <thead>
           <tr>
@@ -800,7 +875,14 @@
       let active = 3;
       let DEN = dens[active];
 
+      // Phones only. 820px used to catch iPads; every phone is <=430px wide
+      // in portrait and the smallest tablet is 744px. Keep in sync with the
+      // @media blocks above.
+      const MOBILE_MQ = "(max-width: 600px)";
+
       const tolBtns = [...document.querySelectorAll(".tol-btn")];
+      const tolBar = document.getElementById("tolBar");
+      const historyCard = document.querySelector(".history");
       const box = document.getElementById("box");
       const display = document.getElementById("display");
       const err = document.getElementById("err");
@@ -1091,8 +1173,9 @@
       }
 
       // Keep the caret in the input when tapping keys (prevents blur/flicker).
+      // Covers the precision chips too, now that they ride on the keypad.
       keypad.addEventListener("mousedown", (e) => {
-        if (e.target.closest(".key")) e.preventDefault();
+        if (e.target.closest(".key, .tol-btn")) e.preventDefault();
       });
 
       // Hold backspace to wipe the line — the usual calculator "clear".
@@ -1135,13 +1218,17 @@
 
       // Suppress the native virtual keyboard when the custom pad is active,
       // and reserve page space so the fixed keypad never covers content.
-      const touchMode = window.matchMedia("(max-width: 820px)");
+      const touchMode = window.matchMedia(MOBILE_MQ);
       function syncTouchMode() {
         if (touchMode.matches) {
           box.setAttribute("inputmode", "none");
+          // precision steps belong within thumb reach, on top of the keys
+          if (tolBar.parentElement !== keypad) keypad.prepend(tolBar);
           document.body.style.paddingBottom = keypad.offsetHeight + 16 + "px";
         } else {
           box.removeAttribute("inputmode");
+          // on the web they're tabs on top of the results columns
+          if (tolBar.parentElement !== historyCard) historyCard.prepend(tolBar);
           document.body.style.paddingBottom = "";
         }
         trackCaret();
