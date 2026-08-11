@@ -485,6 +485,15 @@
           font-size: clamp(9px, 2.55vw, 12px);
           line-height: 1;
         }
+        /* the :first-child half of the rule above outranks the base .active
+           rule, so the 1/2" chip needs an equally specific selector here or it
+           stays white with white text when selected */
+        .tol-btn.active,
+        .tol-btn:first-child.active {
+          background: var(--tx);
+          border-color: var(--tx);
+          color: var(--bg);
+        }
         /* eight steps only fit across a phone without the inch mark */
         .tol-btn .mk {
           display: none;
