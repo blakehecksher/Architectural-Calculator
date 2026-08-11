@@ -890,7 +890,7 @@
       </div>
     </div>
     <script type="module">
-      import { parseInput, formatOutputs } from "./calc.js";
+      import { parseInput, formatOutputs, prettyExpr } from "./calc.js";
 
       const dens = [2, 4, 8, 16, 32, 64, 128, 256];
       let active = 3;
@@ -1080,6 +1080,25 @@
         box.addEventListener(evt, trackCaret)
       );
 
+      // Tidy the spacing once the user has stopped typing. Doing it on every
+      // keystroke would fight the caret, and a half-typed expression has
+      // nothing to space out yet — so we wait for blur, and only rewrite an
+      // expression that actually parses.
+      box.addEventListener("blur", () => {
+        const expr = box.value.trim();
+        if (!expr) return;
+        try {
+          parseInput(expr);
+        } catch {
+          return;
+        }
+        const pretty = prettyExpr(expr);
+        if (pretty !== box.value) {
+          box.value = pretty;
+          updateFades();
+        }
+      });
+
       box.addEventListener("dblclick", () => {
         copyCalculatedValue(box);
       });
@@ -1092,7 +1111,9 @@
         }
         try {
           const tot = parseInput(expr);
-          addRow(expr, tot);
+          // Record the spaced-out form: it's the same expression, just
+          // easier to read back later.
+          addRow(prettyExpr(expr), tot);
           box.value = "";
           setError("");
           refreshLive();
