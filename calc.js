@@ -141,7 +141,7 @@ export function formatOutputs(tot, DEN) {
     inch -= 12;
   }
   return {
-    fFt: `${sign}${mixed(ft, DEN)}'-${mixed(inch, DEN)}"`,
+    fFt: `${sign}${mixed(ft, DEN)}' ${mixed(inch, DEN)}"`,
     dFt: `${sign}${trimZeros(abs / 12)}'`,
     fIn: `${sign}${mixed(abs, DEN)}"`,
     dIn: `${sign}${trimZeros(abs)}"`,
