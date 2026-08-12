@@ -1,6 +1,6 @@
 // Test suite for the Feet & Inches parser/formatter.
 // Run with:  node calc.test.mjs
-import { parseInput, formatOutputs } from "./calc.js";
+import { parseInput, formatOutputs, prettyExpr } from "./calc.js";
 
 let pass = 0;
 const failures = [];
@@ -25,6 +25,20 @@ function bad(input) {
     failures.push(`parse ${JSON.stringify(input)} → ${got}  (expected a thrown error)`);
   } catch {
     pass++;
+  }
+}
+
+// prettyExpr(input) should render as `exp` — and, since it is a display-only
+// rewrite, must still parse to the same number as the original.
+function pretty(input, exp) {
+  const got = prettyExpr(input);
+  if (got === exp) pass++;
+  else failures.push(`pretty ${JSON.stringify(input)} → ${JSON.stringify(got)}  (expected ${JSON.stringify(exp)})`);
+  try {
+    if (approx(parseInput(input), parseInput(got))) pass++;
+    else failures.push(`pretty ${JSON.stringify(input)} changed the value: ${parseInput(input)} → ${parseInput(got)}`);
+  } catch (e) {
+    failures.push(`pretty ${JSON.stringify(input)} → ${JSON.stringify(got)} no longer parses: "${e.message}"`);
   }
 }
 
@@ -170,6 +184,26 @@ fmt(-1200, 16, { fIn: '-1,200"', dIn: '-1,200"' });
 // grouped output must feed straight back into the parser
 eq('1,234 1/2"', 1234.5);
 eq("100,000'", 1200000);
+
+/* Expression pretty-printing: operators get air, fraction bars don't. */
+pretty(`5+3 1/4"`, `5 + 3 1/4"`);
+pretty(`3/4"`, `3/4"`);
+pretty(`24"/2`, `24" / 2`);
+pretty(`24"   /   2`, `24" / 2`);
+pretty(`1/2"+1/4"`, `1/2" + 1/4"`);
+pretty(`(1.5'*2)`, `(1.5' * 2)`);
+pretty(`(3'+4")*2/3`, `(3' + 4") * 2/3`);
+pretty(`5'*2-1/16"`, `5' * 2 - 1/16"`);
+pretty(`10"x3`, `10" * 3`); // normalize() folds x/× into *
+pretty(`1,200"+1`, `1200" + 1`);
+// feet-and-inches stays one token, and gains the inch mark it implied
+pretty(`2'6+1/2"`, `2' 6" + 1/2"`);
+pretty(`2  '  6 1/2  "`, `2' 6 1/2"`);
+// a leading minus is a sign, not a subtraction — it stays glued on
+pretty(`-2'6"+3`, `-2' 6" + 3`);
+pretty(`(-3")*2`, `(-3") * 2`);
+// unicode marks normalize on the way through
+pretty(`5’+3 1/4”`, `5' + 3 1/4"`);
 
 /* ------------------------------------------------------------------ */
 if (failures.length) {

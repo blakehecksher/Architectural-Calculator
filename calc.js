@@ -77,6 +77,81 @@ export function pre(s) {
     .replace(RX_PURE_FRAC, (m) => `(${m})`);
 }
 
+/* ---------- display formatting for the expression itself ---------- */
+
+// Display-only tokenizer. The only genuinely ambiguous character is "/" —
+// it is both the division sign and the fraction bar — so we can't decide
+// spacing character by character. Instead we match whole measurement tokens
+// first (the same shapes the parser recognises); any "/" left over after
+// that is division and gets spaced, while a "/" swallowed inside a token
+// stays tight. 3/4" keeps its bar, 24" / 2 gets air.
+//
+// Sticky flag: we walk the string left to right and the alternatives are
+// tried in the same priority order the parser uses.
+const RX_TOKEN = new RegExp(
+  [
+    `(${QTY})\\s*${QUOTE_FT}\\s*(?:(${QTY})\\s*${QUOTE_IN}?)?`, // 2'  /  2'6"
+    `(${QTY})\\s*${QUOTE_IN}`, // 3 1/2"
+    QTY, // bare number or fraction
+    "[-+*/()]",
+    "\\s+", // separator between tokens — dropped, we re-space from scratch
+    "\\S", // anything else: pass through so bad input still renders
+  ].join("|"),
+  "gy"
+);
+
+// Collapse the whitespace inside a quantity: "9   1/2" → "9 1/2".
+const tidyQty = (q) => q.trim().replace(/\s+/g, " ");
+
+// Re-render an expression with spaces around the arithmetic operators while
+// leaving measurements — and the fraction bars inside them — intact.
+// Value-preserving: the result parses back to the same number.
+export function prettyExpr(s) {
+  const src = normalize(s).trim();
+  let out = "";
+  // True when the next token would open an operand — which is exactly where
+  // a "-" is a sign rather than a subtraction.
+  let expectOperand = true;
+  // Set when the previous token must butt straight up against this one:
+  // after "(" and after a unary sign.
+  let tight = true;
+
+  const emit = (text, { operand, glue = false }) => {
+    out += (tight || text === ")" ? "" : " ") + text;
+    expectOperand = !operand;
+    tight = glue;
+  };
+
+  RX_TOKEN.lastIndex = 0;
+  let m;
+  while ((m = RX_TOKEN.exec(src))) {
+    const [tok, ft, ftIn, inch] = m;
+
+    if (/^\s+$/.test(tok)) {
+      continue;
+    } else if (ft !== undefined) {
+      const text = `${tidyQty(ft)}'` + (ftIn !== undefined ? ` ${tidyQty(ftIn)}"` : "");
+      emit(text, { operand: true });
+    } else if (inch !== undefined) {
+      emit(`${tidyQty(inch)}"`, { operand: true });
+    } else if (tok === "(") {
+      emit("(", { operand: false, glue: true });
+      expectOperand = true;
+    } else if (tok === ")") {
+      emit(")", { operand: true });
+    } else if (tok === "-" && expectOperand) {
+      emit("-", { operand: false, glue: true });
+      expectOperand = true;
+    } else if (/^[-+*/]$/.test(tok)) {
+      emit(tok, { operand: false });
+      expectOperand = true;
+    } else {
+      emit(tidyQty(tok), { operand: true });
+    }
+  }
+  return out;
+}
+
 export function evaluate(expr) {
   if (/[^0-9+\-*/().\s]/.test(expr)) {
     throw new SyntaxError("Invalid input");
