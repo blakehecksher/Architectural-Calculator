@@ -420,6 +420,48 @@
         background: var(--bg-2);
       }
 
+      /* ---------- header row (web) ----------
+         The title shares a line with the precision tabs: it sits over the
+         Input half of the card while the tabs span the results half, so the
+         page opens straight into the card instead of a stacked title band.
+         Mobile keeps the stacked header — see the max-width block below. */
+      @media (min-width: 601px) {
+        .head-row {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+
+        .head-left {
+          flex: 1 1 0;
+          min-width: 0;
+          display: flex;
+          align-items: baseline;
+          gap: 10px;
+        }
+
+        .app-bar {
+          margin-bottom: 0;
+        }
+
+        .msg-bar {
+          flex: 1 1 auto;
+          min-width: 0;
+          min-height: 0;
+          margin-bottom: 0;
+          overflow: hidden;
+        }
+
+        /* the bar owns the results half; the tabs fill it */
+        .head-row .tol-bar {
+          flex: 0 0 50%;
+        }
+
+        .head-row .tol-tabs {
+          width: 100%;
+        }
+      }
+
       /* Tablets get the web layout, but the tabs are boxed into half a
          narrower card — scale the label down and drop the inch mark rather
          than break the alignment with the columns. */
@@ -786,23 +828,27 @@
     </style>
   </head>
   <body>
-    <div class="app-bar">
-      <h1>Feet &amp; Inches Calculator</h1>
-    </div>
-    <div class="msg-bar">
-      <div class="error" id="err" role="alert" aria-live="assertive"></div>
-      <div class="status" id="status" aria-live="polite"></div>
-    </div>
-    <div class="tol-bar" id="tolBar">
-      <div class="tol-tabs" role="group" aria-label="Rounding precision">
-        <button class="tol-btn" data-den="2" aria-pressed="false" aria-label="half inch">1/2<span class="mk">&#8243;</span></button>
-        <button class="tol-btn" data-den="4" aria-pressed="false" aria-label="quarter inch">1/4<span class="mk">&#8243;</span></button>
-        <button class="tol-btn" data-den="8" aria-pressed="false" aria-label="eighth inch">1/8<span class="mk">&#8243;</span></button>
-        <button class="tol-btn active" data-den="16" aria-pressed="true" aria-label="sixteenth inch">1/16<span class="mk">&#8243;</span></button>
-        <button class="tol-btn" data-den="32" aria-pressed="false" aria-label="thirty-second inch">1/32<span class="mk">&#8243;</span></button>
-        <button class="tol-btn" data-den="64" aria-pressed="false" aria-label="sixty-fourth inch">1/64<span class="mk">&#8243;</span></button>
-        <button class="tol-btn" data-den="128" aria-pressed="false" aria-label="one hundred twenty-eighth inch">1/128<span class="mk">&#8243;</span></button>
-        <button class="tol-btn" data-den="256" aria-pressed="false" aria-label="two hundred fifty-sixth inch">1/256<span class="mk">&#8243;</span></button>
+    <div class="head-row" id="headRow">
+      <div class="head-left">
+        <div class="app-bar">
+          <h1>Feet &amp; Inches Calculator</h1>
+        </div>
+        <div class="msg-bar">
+          <div class="error" id="err" role="alert" aria-live="assertive"></div>
+          <div class="status" id="status" aria-live="polite"></div>
+        </div>
+      </div>
+      <div class="tol-bar" id="tolBar">
+        <div class="tol-tabs" role="group" aria-label="Rounding precision">
+          <button class="tol-btn" data-den="2" aria-pressed="false" aria-label="half inch">1/2<span class="mk">&#8243;</span></button>
+          <button class="tol-btn" data-den="4" aria-pressed="false" aria-label="quarter inch">1/4<span class="mk">&#8243;</span></button>
+          <button class="tol-btn" data-den="8" aria-pressed="false" aria-label="eighth inch">1/8<span class="mk">&#8243;</span></button>
+          <button class="tol-btn active" data-den="16" aria-pressed="true" aria-label="sixteenth inch">1/16<span class="mk">&#8243;</span></button>
+          <button class="tol-btn" data-den="32" aria-pressed="false" aria-label="thirty-second inch">1/32<span class="mk">&#8243;</span></button>
+          <button class="tol-btn" data-den="64" aria-pressed="false" aria-label="sixty-fourth inch">1/64<span class="mk">&#8243;</span></button>
+          <button class="tol-btn" data-den="128" aria-pressed="false" aria-label="one hundred twenty-eighth inch">1/128<span class="mk">&#8243;</span></button>
+          <button class="tol-btn" data-den="256" aria-pressed="false" aria-label="two hundred fifty-sixth inch">1/256<span class="mk">&#8243;</span></button>
+        </div>
       </div>
     </div>
     <div class="history">
@@ -903,7 +949,7 @@
 
       const tolBtns = [...document.querySelectorAll(".tol-btn")];
       const tolBar = document.getElementById("tolBar");
-      const historyCard = document.querySelector(".history");
+      const headRow = document.getElementById("headRow");
       const box = document.getElementById("box");
       const display = document.getElementById("display");
       const err = document.getElementById("err");
@@ -1282,7 +1328,7 @@
         } else {
           box.removeAttribute("inputmode");
           // on the web they're tabs sitting on top of the results columns
-          if (tolBar.nextElementSibling !== historyCard) historyCard.before(tolBar);
+          if (tolBar.parentElement !== headRow) headRow.append(tolBar);
           document.body.style.paddingBottom = "";
         }
         trackCaret();
