@@ -17,8 +17,11 @@ const QTY = "(?:\\d+\\s+\\d+\\/\\d+|\\d+\\/\\d+|\\d*\\.?\\d+)";
 // Feet, with optional inches. The inch mark is OPTIONAL, so that
 // architectural shorthand like  2'9  reads as 2 ft 9 in (not "249"). A number
 // directly following a feet mark is always interpreted as inches.
+// The whitespace before the inch mark is inside the optional group, so a
+// trailing space is only consumed when a mark actually follows it — otherwise
+//  2'9 4  would match "2'9 " and leave "334".
 const RX_FT_IN = new RegExp(
-  `(-?${QTY})\\s*${QUOTE_FT}\\s*(?:(${QTY})\\s*${QUOTE_IN}?)?`,
+  `(-?${QTY})\\s*${QUOTE_FT}\\s*(?:(${QTY})(?:\\s*${QUOTE_IN})?)?`,
   "g"
 );
 // Standalone inches: 3"  /  3 1/2"  /  1/2"
@@ -38,7 +41,32 @@ export function normalize(s) {
     .replace(/÷/g, "/")
     .replace(/[–—]/g, "-")
     .replace(/,/g, "")
-    .replace(/\s*(['"])\s*/g, "$1");
+    // Space before a mark is noise ("2 '" is "2'"). Space *after* one is not:
+    // eating it turned  24" 3  into  243  instead of an error.
+    .replace(/\s+(['"])/g, "$1");
+}
+
+// Architectural shorthand drops the feet mark as readily as the inch mark, so
+// two unmarked quantities separated by nothing but whitespace read as feet
+// then inches:  295 6  /  295 6 1/4  /  295 6.25  are all 295'-6"ish.
+//
+// The shape that must NOT be caught is the mixed number: "1 1/2" has always
+// meant an inch and a half, so a lone fraction still binds to the number on
+// its left. The cost is that "295 1/4" stays 295.25" — write 295' 1/4" for
+// two hundred ninety-five feet and a quarter inch.
+const RX_IMPLY_FT = new RegExp(
+  "(^|[-+*/(\\s])" + // feet can only open an operand, never continue one
+    "(\\d+(?:\\.\\d+)?)\\s+" + // feet: a plain whole or decimal number
+    "(?!\\d+\\/\\d+)" + // a lone fraction belongs to the number behind it
+    `(${QTY})` + // inches: whatever is left, "6 1/4" included
+    `(?!\\s*${QUOTE_FT})`, // ...unless it is marked as feet itself
+  "g"
+);
+
+// Write the implied feet mark in, so the rest of the pipeline only ever sees
+// notation it already understands.
+export function implyFeet(s) {
+  return s.replace(RX_IMPLY_FT, (m, lead, ft, inch) => `${lead}${ft}' ${inch}`);
 }
 
 export function parseFrac(str) {
@@ -64,7 +92,7 @@ export function parseFrac(str) {
 // Rewrite architectural notation into a plain arithmetic expression whose
 // unit is inches.
 export function pre(s) {
-  return normalize(s)
+  return implyFeet(normalize(s))
     .replace(RX_FT_IN, (m, f, i) => {
       // A leading "-" negates the whole measurement, so -2'6" is -(2ft 6in),
       // i.e. -30", not (-2ft)+(6in) = -18".
@@ -90,7 +118,7 @@ export function pre(s) {
 // tried in the same priority order the parser uses.
 const RX_TOKEN = new RegExp(
   [
-    `(${QTY})\\s*${QUOTE_FT}\\s*(?:(${QTY})\\s*${QUOTE_IN}?)?`, // 2'  /  2'6"
+    `(${QTY})\\s*${QUOTE_FT}\\s*(?:(${QTY})(?:\\s*${QUOTE_IN})?)?`, // 2'  /  2'6"
     `(${QTY})\\s*${QUOTE_IN}`, // 3 1/2"
     QTY, // bare number or fraction
     "[-+*/()]",
@@ -107,47 +135,62 @@ const tidyQty = (q) => q.trim().replace(/\s+/g, " ");
 // leaving measurements — and the fraction bars inside them — intact.
 // Value-preserving: the result parses back to the same number.
 export function prettyExpr(s) {
-  const src = normalize(s).trim();
-  let out = "";
-  // True when the next token would open an operand — which is exactly where
-  // a "-" is a sign rather than a subtraction.
-  let expectOperand = true;
-  // Set when the previous token must butt straight up against this one:
-  // after "(" and after a unary sign.
-  let tight = true;
+  const src = implyFeet(normalize(s)).trim();
 
-  const emit = (text, { operand, glue = false }) => {
-    out += (tight || text === ")" ? "" : " ") + text;
-    expectOperand = !operand;
-    tight = glue;
-  };
-
+  // Pass one: tokenise. We can't render as we go any more — whether a bare
+  // number is a length depends on the token that comes after it.
+  const toks = [];
+  let expectOperand = true; // exactly where a "-" is a sign, not a subtraction
   RX_TOKEN.lastIndex = 0;
   let m;
   while ((m = RX_TOKEN.exec(src))) {
     const [tok, ft, ftIn, inch] = m;
-
-    if (/^\s+$/.test(tok)) {
-      continue;
-    } else if (ft !== undefined) {
-      const text = `${tidyQty(ft)}'` + (ftIn !== undefined ? ` ${tidyQty(ftIn)}"` : "");
-      emit(text, { operand: true });
+    if (/^\s+$/.test(tok)) continue; // separator: we re-space from scratch
+    if (ft !== undefined) {
+      const t = `${tidyQty(ft)}'` + (ftIn !== undefined ? ` ${tidyQty(ftIn)}"` : "");
+      toks.push({ kind: "meas", text: t });
+      expectOperand = false;
     } else if (inch !== undefined) {
-      emit(`${tidyQty(inch)}"`, { operand: true });
+      toks.push({ kind: "meas", text: `${tidyQty(inch)}"` });
+      expectOperand = false;
     } else if (tok === "(") {
-      emit("(", { operand: false, glue: true });
+      toks.push({ kind: "open", text: "(" });
       expectOperand = true;
     } else if (tok === ")") {
-      emit(")", { operand: true });
+      toks.push({ kind: "close", text: ")" });
+      expectOperand = false;
     } else if (tok === "-" && expectOperand) {
-      emit("-", { operand: false, glue: true });
+      toks.push({ kind: "sign", text: "-" });
       expectOperand = true;
     } else if (/^[-+*/]$/.test(tok)) {
-      emit(tok, { operand: false });
+      toks.push({ kind: "op", text: tok });
       expectOperand = true;
     } else {
-      emit(tidyQty(tok), { operand: true });
+      toks.push({ kind: "qty", text: tidyQty(tok) });
+      expectOperand = false;
     }
+  }
+
+  // Pass two: give the bare numbers their inch mark. The parser reads them as
+  // inches already — "295' 6 - 20" is 20 inches short — so the display should
+  // say so. The exception is a number next to * or /: there it scales a
+  // measurement rather than being one, and  2' * 3"  would be nonsense.
+  const scales = (t) => t && t.kind === "op" && (t.text === "*" || t.text === "/");
+  toks.forEach((tok, i) => {
+    if (tok.kind !== "qty") return;
+    let before = i - 1;
+    if (toks[before] && toks[before].kind === "sign") before--;
+    if (scales(toks[before]) || scales(toks[i + 1])) return;
+    tok.text += '"';
+  });
+
+  // Pass three: re-space. Everything butts up against an opening paren or a
+  // unary sign; a closing paren butts up against whatever precedes it.
+  let out = "";
+  let tight = true;
+  for (const tok of toks) {
+    out += (tight || tok.kind === "close" ? "" : " ") + tok.text;
+    tight = tok.kind === "open" || tok.kind === "sign";
   }
   return out;
 }
@@ -155,6 +198,12 @@ export function prettyExpr(s) {
 export function evaluate(expr) {
   if (/[^0-9+\-*/().\s]/.test(expr)) {
     throw new SyntaxError("Invalid input");
+  }
+  // Two numbers with nothing but space between them are a measurement that
+  // never came together — "5 6 7", "24\" 3". Function() would only report
+  // "Unexpected number", so say what actually went wrong.
+  if (/\d\s+[\d.]/.test(expr)) {
+    throw new SyntaxError("Missing an operator between two numbers");
   }
   return Function(`"use strict";return (${expr})`)();
 }

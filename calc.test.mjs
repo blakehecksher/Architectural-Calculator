@@ -78,6 +78,47 @@ eq("0'5", 5);
 eq("2' 9", 33);
 eq("20'9", 249); // genuinely twenty feet nine inches
 
+/* Feet + inches with NO marks at all — 295 6 is 295'-6" */
+eq("295 6", 3546);
+eq("295 6.25", 3546.25);
+eq("295 6 1/4", 3546.25);
+eq('295 6"', 3546);
+eq('295 6 1/4"', 3546.25);
+eq("0 6", 6);
+eq("6 0", 72);
+eq("1.5 6", 24);
+eq("-295 6", -3546); // the sign negates the whole measurement
+eq("100,000 6", 1200006);
+eq("295 6 - 20", 3526);
+eq("2 + 3 4", 42);
+eq("295 6 + 2 3", 3573);
+
+/* ...but a lone fraction still binds LEFT as a mixed number, so these are
+   inches, not feet. Write 295' 1/4" if you mean feet. */
+eq("295 1/4", 295.25);
+eq("295 1/4 + 2", 297.25);
+eq('5 1/2"', 5.5);
+eq("2' 6 1/4", 30.25);
+
+/* Mixed-number feet come along for free: the implied mark lands after the
+   whole mixed number, so "5 1/2 6" is 5 1/2 feet plus 6 inches. */
+eq("5 1/2 6", 72);
+eq("2 1/4 6", 33);
+eq("1/2 6", 12);
+// ...without disturbing division
+eq("6 / 2 + 1", 4);
+eq("24 / 2", 12);
+
+/* Two numbers that never joined into one measurement are an error — they
+   used to silently concatenate ("2'9 4" printed 334). */
+bad("5 6 7");
+bad("2 3 4");
+bad('24" 3');
+bad("2'9 4");
+bad("2' 9 4");
+bad('5\'6" 4');
+bad("295 6'");
+
 /* Fractions */
 eq('1/2"', 0.5);
 eq('3/4"', 0.75);
@@ -186,7 +227,7 @@ eq('1,234 1/2"', 1234.5);
 eq("100,000'", 1200000);
 
 /* Expression pretty-printing: operators get air, fraction bars don't. */
-pretty(`5+3 1/4"`, `5 + 3 1/4"`);
+pretty(`5+3 1/4"`, `5" + 3 1/4"`);
 pretty(`3/4"`, `3/4"`);
 pretty(`24"/2`, `24" / 2`);
 pretty(`24"   /   2`, `24" / 2`);
@@ -195,13 +236,25 @@ pretty(`(1.5'*2)`, `(1.5' * 2)`);
 pretty(`(3'+4")*2/3`, `(3' + 4") * 2/3`);
 pretty(`5'*2-1/16"`, `5' * 2 - 1/16"`);
 pretty(`10"x3`, `10" * 3`); // normalize() folds x/× into *
-pretty(`1,200"+1`, `1200" + 1`);
+pretty(`1,200"+1`, `1200" + 1"`);
 // feet-and-inches stays one token, and gains the inch mark it implied
 pretty(`2'6+1/2"`, `2' 6" + 1/2"`);
 pretty(`2  '  6 1/2  "`, `2' 6 1/2"`);
 // a leading minus is a sign, not a subtraction — it stays glued on
-pretty(`-2'6"+3`, `-2' 6" + 3`);
+pretty(`-2'6"+3`, `-2' 6" + 3"`);
 pretty(`(-3")*2`, `(-3") * 2`);
+// a bare number is inches, and says so — unless it scales a measurement
+pretty(`295 6 - 20`, `295' 6" - 20"`);
+pretty(`295 6 1/4`, `295' 6 1/4"`);
+pretty(`295 6.25+1`, `295' 6.25" + 1"`);
+pretty(`1 1/2`, `1 1/2"`);
+pretty(`2'*3`, `2' * 3`);
+pretty(`3*2'`, `3 * 2'`);
+pretty(`2+3*4`, `2" + 3 * 4`);
+pretty(`(2+3)*4`, `(2" + 3") * 4`);
+// "/" inside a token is still read as a fraction bar, not division — 12/2 is
+// six inches either way, so the mark is honest
+pretty(`12/2`, `12/2"`);
 // unicode marks normalize on the way through
 pretty(`5’+3 1/4”`, `5' + 3 1/4"`);
 
