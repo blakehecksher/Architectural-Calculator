@@ -130,9 +130,11 @@
         border-left: none;
       }
 
-      .tol-btn:hover {
-        background: var(--bg);
-        color: var(--tx);
+      @media (hover: hover) and (pointer: fine) {
+        .tol-btn:hover {
+          background: var(--bg);
+          color: var(--tx);
+        }
       }
 
       .tol-btn.active {
@@ -215,8 +217,10 @@
         transition: background-color 0.12s ease;
       }
 
-      tbody tr:hover {
-        background: color-mix(in srgb, var(--bg-2) 55%, transparent);
+      @media (hover: hover) and (pointer: fine) {
+        tbody tr:hover {
+          background: color-mix(in srgb, var(--bg-2) 55%, transparent);
+        }
       }
 
       .calc-value {
@@ -234,8 +238,7 @@
       }
 
       /* ---------- live row / display ---------- */
-      #liveRow,
-      #liveRow:hover {
+      #liveRow {
         background: var(--bg-2);
       }
 
@@ -324,10 +327,12 @@
         transition: background-color 0.15s ease;
       }
 
-      .calc-value:hover,
-      .input-copy:hover {
-        cursor: copy;
-        background: color-mix(in srgb, var(--ui) 55%, transparent);
+      @media (hover: hover) and (pointer: fine) {
+        .calc-value:hover,
+        .input-copy:hover {
+          cursor: copy;
+          background: color-mix(in srgb, var(--ui) 55%, transparent);
+        }
       }
 
       .calc-value:active,
@@ -390,17 +395,33 @@
           border-color 0.12s ease, opacity 0.12s ease;
       }
 
-      .del:hover,
       .del:focus-visible {
         background: var(--re);
         border-color: var(--re);
         color: var(--bg);
       }
 
-      tr:hover .del,
       tr:focus-within .del {
         opacity: 1;
         pointer-events: auto;
+      }
+
+      .del svg {
+        width: 10px;
+        height: 10px;
+        flex: none;
+      }
+
+      @media (hover: hover) and (pointer: fine) {
+        .del:hover {
+          background: var(--re);
+          border-color: var(--re);
+          color: var(--bg);
+        }
+        tr:hover .del {
+          opacity: 1;
+          pointer-events: auto;
+        }
       }
 
       /* ---------- empty state + hints ---------- */
@@ -746,6 +767,13 @@
           box-shadow: 0 1px 0 color-mix(in srgb, var(--re) 68%, black),
             var(--shadow-1);
         }
+        .key.back svg {
+          display: block;
+          width: 24px;
+          height: 24px;
+          margin: 0 auto;
+          pointer-events: none;
+        }
         .key.space {
           grid-column: span 2;
           font-size: 27px;
@@ -897,7 +925,7 @@
     <template id="row-tpl">
       <tr data-inches="">
         <td class="input-cell input-copy" colspan="4" title="Click to copy">
-          <button class="del" aria-label="Delete row">&times;</button><span class="expr"></span>
+          <button class="del" aria-label="Delete row"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M3 3l6 6M9 3l-6 6" /></svg></button><span class="expr"></span>
         </td>
         <td class="fFeet calc-value" data-label="Ft-In (frac)" title="Click to copy"></td>
         <td class="dFt calc-value" data-label="Feet (dec)" title="Click to copy"></td>
@@ -907,7 +935,7 @@
     </template>
     <div class="keypad" id="keypad" aria-label="Calculator keypad">
       <div class="keys">
-        <button class="key back" data-k="back" aria-label="backspace, hold to clear">&#9003;</button>
+        <button class="key back" data-k="back" aria-label="backspace, hold to clear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 5H20a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H9l-7-7 7-7Z" /><path d="m11 9 6 6m0-6-6 6" /></svg></button>
         <button class="key mark" data-k="&quot;" aria-label="inch mark">&Prime;</button>
         <button class="key mark" data-k="'" aria-label="feet mark">&prime;</button>
         <button class="key op" data-k="(">(</button>
